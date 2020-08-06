@@ -1,9 +1,9 @@
 import torch.nn as nn
 import torch.nn.functional as F
 
-class VGG19Preprocessing(nn.Module):
+class VGG19FeatureExtractor(nn.Module):
     def __init__(self):
-        super(VGG19Preprocessing, self).__init__()
+        super(VGG19FeatureExtractor, self).__init__()
 
         self.conv1  = nn.Conv2d(in_channels=3, out_channels=64, kernel_size=3, stride=1, padding=1)     # {'conv1_1': [3, 64, 3, 1, 1]}
         self.ReLU1  = nn.ReLU(inplace=True)

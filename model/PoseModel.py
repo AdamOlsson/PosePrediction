@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from model.preprocessing.vgg19 import VGG19Preprocessing
+from model.feature_extractors.VGG import VGG19FeatureExtractor
 
 class Block5(nn.Module):
     def __init__(self, channels_out):
@@ -56,7 +56,7 @@ class PoseModel(nn.Module):
     def __init__(self):
         super(PoseModel, self).__init__()
 
-        self.preprocessing = VGG19Preprocessing()
+        self.preprocessing = VGG19FeatureExtractor()
 
         self.stage1_branch1 = Block5(channels_out=38)
         self.stage1_branch2 = Block5(channels_out=19)
