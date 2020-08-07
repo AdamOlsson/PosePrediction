@@ -371,7 +371,7 @@ def paf_to_pose(heatmaps, pafs, config):
 
 def paf_to_pose_cpp(heatmaps, pafs, config):
     humans = []
-    joint_list_per_joint_type = NMS(heatmaps, upsampFactor=config.MODEL.DOWNSAMPLE, config=config)
+    joint_list_per_joint_type = NMS(heatmaps, upsampFactor=config["model"]["downsample"], config=config)
 
     joint_list = np.array(
         [tuple(peak) + (joint_type,) for joint_type, joint_peaks in enumerate(joint_list_per_joint_type) for peak in
@@ -380,14 +380,14 @@ def paf_to_pose_cpp(heatmaps, pafs, config):
     if joint_list.shape[0] > 0:
         joint_list = np.expand_dims(joint_list, 0)
         paf_upsamp = cv2.resize(
-            pafs, None, fx=config.MODEL.DOWNSAMPLE, fy=config.MODEL.DOWNSAMPLE, interpolation=cv2.INTER_NEAREST)
+            pafs, None, fx=config["model"]["downsample"], fy=config["model"]["downsample"], interpolation=cv2.INTER_NEAREST)
         heatmap_upsamp = cv2.resize(
-            heatmaps, None, fx=config.MODEL.DOWNSAMPLE, fy=config.MODEL.DOWNSAMPLE, interpolation=cv2.INTER_NEAREST)
+            heatmaps, None, fx=config["model"]["downsample"], fy=config["model"]["downsample"], interpolation=cv2.INTER_NEAREST)
         pafprocess.process_paf(joint_list, heatmap_upsamp, paf_upsamp)
         for human_id in range(pafprocess.get_num_humans()):
             human = Human([])
             is_added = False
-            for part_idx in range(config.MODEL.NUM_KEYPOINTS):
+            for part_idx in range(config["model"]["no_keypoints"]):
                 c_idx = int(pafprocess.get_part_cid(human_id, part_idx))
                 if c_idx < 0:
                     continue
