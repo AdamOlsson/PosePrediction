@@ -1,0 +1,9 @@
+{
+    "model":{
+        "downsample":8,
+        "no_keypoints":18
+    },
+    "dataset":{
+        "image_size":368
+    }
+}
