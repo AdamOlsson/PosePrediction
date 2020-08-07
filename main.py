@@ -11,6 +11,9 @@ from Transformers.FactorCrop import FactorCrop
 from Transformers.RTPosePreprocessing import RTPosePreprocessing
 from Transformers.ToRTPoseInput import ToRTPoseInput
 
+# util
+from util.load_config import load_config
+
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -38,18 +41,26 @@ if __name__ == "__main__":
 
     path_data = "../exercise_prediction/data/images/"
     path_annotations = "../exercise_prediction/data/images/annotations.csv"
+    
+    config = load_config("config.json")
 
-
-    transformers = [FactorCrop(8, dest_size=368), RTPosePreprocessing(), ToRTPoseInput(0)]
+    transformers = [FactorCrop(config["model"]["downsample"], dest_size=config["dataset"]["image_size"]), RTPosePreprocessing(), ToRTPoseInput(0)]
     dataset = ImageDataset(path_annotations, path_data, transform=Compose(transformers))
     
-    #showRandomSample(dataset)
+    showRandomSample(dataset)
 
     model = PoseModel()
     model.load_state_dict(torch.load("model/weights/vgg19.pt"))
 
     with torch.no_grad():
-        output, _ = model(dataset[0]['image'])
+        (branch1, branch2), _ = model(dataset[0]['image'])
 
-    print(output)
+    paf = branch1.data.numpy().transpose(0, 2, 3, 1)[0]
+    heatmap = branch2.data.numpy().transpose(0, 2, 3, 1)[0]
+
+    # humans = paf_to_pose_cpp(heatmap, paf, config)
+
+
+    
+
 
