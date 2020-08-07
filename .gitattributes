@@ -1,3 +1,1 @@
-src/model/weights/vgg19_weights.pt filter=lfs diff=lfs merge=lfs -text
 model/weights/vgg19.pt filter=lfs diff=lfs merge=lfs -text
-model/weights/vgg19_weights.pt filter=lfs diff=lfs merge=lfs -text
