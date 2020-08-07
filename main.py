@@ -13,6 +13,7 @@ from Transformers.ToRTPoseInput import ToRTPoseInput
 
 # util
 from util.load_config import load_config
+from paf.paf_to_pose import paf_to_pose_cpp
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -47,7 +48,7 @@ if __name__ == "__main__":
     transformers = [FactorCrop(config["model"]["downsample"], dest_size=config["dataset"]["image_size"]), RTPosePreprocessing(), ToRTPoseInput(0)]
     dataset = ImageDataset(path_annotations, path_data, transform=Compose(transformers))
     
-    showRandomSample(dataset)
+    #showRandomSample(dataset)
 
     model = PoseModel()
     model.load_state_dict(torch.load("model/weights/vgg19.pt"))
