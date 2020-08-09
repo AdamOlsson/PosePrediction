@@ -14,9 +14,11 @@ from Transformers.ToRTPoseInput import ToRTPoseInput
 # util
 from util.load_config import load_config
 from paf.paf_to_pose import paf_to_pose_cpp
+from paf.common import draw_humans
 
 import matplotlib.pyplot as plt
 import numpy as np
+import cv2
 
 
 def showRandomSample(dataset):
@@ -47,6 +49,8 @@ if __name__ == "__main__":
 
     transformers = [FactorCrop(config["model"]["downsample"], dest_size=config["dataset"]["image_size"]), RTPosePreprocessing(), ToRTPoseInput(0)]
     dataset = ImageDataset(path_annotations, path_data, transform=Compose(transformers))
+    image = dataset[0]['image']
+    image_copy = dataset[0]['copy']
     
     #showRandomSample(dataset)
 
@@ -54,14 +58,14 @@ if __name__ == "__main__":
     model.load_state_dict(torch.load("model/weights/vgg19.pt"))
 
     with torch.no_grad():
-        (branch1, branch2), _ = model(dataset[0]['image'])
+        (branch1, branch2), _ = model(image)
 
     paf = branch1.data.numpy().transpose(0, 2, 3, 1)[0]
     heatmap = branch2.data.numpy().transpose(0, 2, 3, 1)[0]
 
     humans = paf_to_pose_cpp(heatmap, paf, config)
 
+    print(dataset[0]['name'])
 
-    
-
-
+    out = draw_humans(image_copy, humans)
+    cv2.imwrite('result.png', out)
