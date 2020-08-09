@@ -59,7 +59,7 @@ if __name__ == "__main__":
     paf = branch1.data.numpy().transpose(0, 2, 3, 1)[0]
     heatmap = branch2.data.numpy().transpose(0, 2, 3, 1)[0]
 
-    # humans = paf_to_pose_cpp(heatmap, paf, config)
+    humans = paf_to_pose_cpp(heatmap, paf, config)
 
 
     

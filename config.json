@@ -5,5 +5,10 @@
     },
     "dataset":{
         "image_size":368
+    },
+    "test":{
+        "thresh_heatmap":0.1,
+        "thresh_paf":0.05,
+        "no_intermed_pts_between_keypoints":10
     }
 }

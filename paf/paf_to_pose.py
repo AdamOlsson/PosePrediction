@@ -99,9 +99,9 @@ def NMS(heatmaps, upsampFactor=1., bool_refine_center=True, bool_gaussian_filt=F
     # (for BICUBIC interpolation to be accurate, win_size needs to be >=2!)
     win_size = 2
 
-    for joint in range(config.MODEL.NUM_KEYPOINTS):
+    for joint in range(config["model"]["no_keypoints"]):
         map_orig = heatmaps[:, :, joint]
-        peak_coords = find_peaks(config.TEST.THRESH_HEATMAP, map_orig)
+        peak_coords = find_peaks(config["test"]["thresh_heatmap"], map_orig)
         peaks = np.zeros((len(peak_coords), 4))
         for i, peak in enumerate(peak_coords):
             if bool_refine_center:
@@ -216,7 +216,7 @@ def find_connected_joints(paf_upsamp, joint_list_per_joint_type, num_intermed_pt
                     # Criterion 1: At least 80% of the intermediate points have
                     # a score higher than thre2
                     criterion1 = (np.count_nonzero(
-                        score_intermed_pts > config.TEST.THRESH_PAF) > 0.8 * num_intermed_pts)
+                        score_intermed_pts > config["test"]["thresh_paf"]) > 0.8 * num_intermed_pts)
                     # Criterion 2: Mean score, penalized for large limb
                     # distances (larger than half the image height), is
                     # positive
@@ -314,7 +314,7 @@ def group_limbs_of_same_person(connected_limbs, joint_list, config):
                                                         .astype(int), 2] + limb_info[2]
             else:  # No person has claimed any of these joints, create a new person
                 # Initialize person info to all -1 (no joint associations)
-                row = -1 * np.ones(config.MODEL.NUM_KEYPOINTS + 2)
+                row = -1 * np.ones(config["model"]["no_keypoints"] + 2)
                 # Store the joint info of the new connection
                 row[joint_src_type] = limb_info[0]
                 row[joint_dst_type] = limb_info[1]
@@ -347,7 +347,7 @@ def paf_to_pose(heatmaps, pafs, config):
     # Bottom-up approach:
     # Step 1: find all joints in the image (organized by joint type: [0]=nose,
     # [1]=neck...)
-    joint_list_per_joint_type = NMS(heatmaps, upsampFactor=config.MODEL.DOWNSAMPLE, config=config)
+    joint_list_per_joint_type = NMS(heatmaps, upsampFactor=config["model"]["downsample"], config=config)
     # joint_list is an unravel'd version of joint_list_per_joint, where we add
     # a 5th column to indicate the joint_type (0=nose, 1=neck...)
     joint_list = np.array([tuple(peak) + (joint_type,) for joint_type,
@@ -358,9 +358,9 @@ def paf_to_pose(heatmaps, pafs, config):
     # Step 2: find which joints go together to form limbs (which wrists go
     # with which elbows)
     paf_upsamp = cv2.resize(
-        pafs, None, fx=config.MODEL.DOWNSAMPLE, fy=config.MODEL.DOWNSAMPLE, interpolation=cv2.INTER_CUBIC)
+        pafs, None, fx=config["model"]["downsample"], fy=config["model"]["downsample"], interpolation=cv2.INTER_CUBIC)
     connected_limbs = find_connected_joints(paf_upsamp, joint_list_per_joint_type,
-                                            config.TEST.NUM_INTERMED_PTS_BETWEEN_KEYPOINTS, config)
+                                            config["test"]["no_intermed_pts_between_keypoints"], config)
 
     # Step 3: associate limbs that belong to the same person
     person_to_joint_assoc = group_limbs_of_same_person(
