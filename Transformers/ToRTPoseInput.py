@@ -8,7 +8,9 @@ class ToRTPoseInput(object):
 
     def __call__(self, sample):
         
-        image, label = sample['image'], sample['label']
+        image = sample['image']
         image = np.expand_dims(image, self.dim)
 
-        return {'image':torch.from_numpy(image).float(), 'label':label}
+        sample['image'] = torch.from_numpy(image).float()
+
+        return sample

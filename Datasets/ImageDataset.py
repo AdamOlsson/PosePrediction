@@ -1,5 +1,5 @@
 import pandas as pd # easy load of csv
-from skimage import io
+import cv2
 import numpy as np
 
 import torch
@@ -23,10 +23,10 @@ class ImageDataset(Dataset):
 
         img_name = self._path_root + self.annotations.iloc[idx,0]
 
-        img = io.imread(img_name)
+        img = cv2.imread(img_name) # channels are B,G,R
         label = self.annotations.iloc[idx,1]
 
-        sample = {'image':img, 'label':label}
+        sample = {'image':img, 'label':label, 'copy':np.copy(img), 'name':img_name}
 
         if self.transform:
             sample = self.transform(sample)

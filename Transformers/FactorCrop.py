@@ -8,7 +8,7 @@ class FactorCrop(object):
         self.dest_size = dest_size
 
     def __call__(self, sample):
-        image, label = sample['image'], sample['label']
+        image = sample['image']
         
         min_dimension = np.min(image.shape[:2])
         
@@ -25,4 +25,6 @@ class FactorCrop(object):
         image_cropped = np.zeros([h_new, w_new, c], dtype=image.dtype)
         image_cropped[:h, :w, :] = image_resized
 
-        return {'image': image_cropped, 'label':label}
+        sample['image'] = image_cropped
+
+        return sample
