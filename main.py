@@ -68,3 +68,7 @@ if __name__ == "__main__":
 
     out = draw_humans(image_copy, humans)
     cv2.imwrite('result.png', out)
+
+    # TODO: Read paper, https://arxiv.org/abs/1611.08050
+    # TODO: Do pose prediction for video
+    # TODO: Build a graph between frames in poses
