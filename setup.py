@@ -5,5 +5,5 @@ setup(name='PosePrediction',
       author='Adam Olsson',
       #author_email='',
       #url='https://www.python.org/sigs/distutils-sig/',
-      packages=['Transformers', 'paf'],
+      packages=['Transformers', 'paf', 'paf.process']
      )
