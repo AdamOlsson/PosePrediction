@@ -1,4 +1,4 @@
-from distutils.core import setup
+from setuptools import setup, find_packages
 
 install_requires = [
     "torch",
@@ -20,11 +20,11 @@ packages = [
 ]
 
 setup(name='PosePrediction',
-      version='1.0',
+      version='0.1',
       description='Human pose prediction using graphs',
       author='Adam Olsson',
       #author_email='',
       #url='https://www.python.org/sigs/distutils-sig/',
       install_requires=install_requires,
-      packages=packages,
+      packages=find_packages(),
      )
