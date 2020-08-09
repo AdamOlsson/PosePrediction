@@ -55,7 +55,7 @@ if __name__ == "__main__":
     #showRandomSample(dataset)
 
     model = PoseModel()
-    model.load_state_dict(torch.load("model/weights/vgg19.pt"))
+    model.load_state_dict(torch.load("model/weights/vgg.pth"))
 
     with torch.no_grad():
         (branch1, branch2), _ = model(image)
@@ -64,8 +64,6 @@ if __name__ == "__main__":
     heatmap = branch2.data.numpy().transpose(0, 2, 3, 1)[0]
 
     humans = paf_to_pose_cpp(heatmap, paf, config)
-
-    print(dataset[0]['name'])
 
     out = draw_humans(image_copy, humans)
     cv2.imwrite('result.png', out)
