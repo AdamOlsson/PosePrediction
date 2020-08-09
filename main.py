@@ -47,15 +47,16 @@ if __name__ == "__main__":
     
     config = load_config("config.json")
 
+    no = 1053
     transformers = [FactorCrop(config["model"]["downsample"], dest_size=config["dataset"]["image_size"]), RTPosePreprocessing(), ToRTPoseInput(0)]
     dataset = ImageDataset(path_annotations, path_data, transform=Compose(transformers))
-    image = dataset[0]['image']
-    image_copy = dataset[0]['copy']
+    image = dataset[no]['image']
+    image_copy = dataset[no]['copy']
     
     #showRandomSample(dataset)
 
     model = PoseModel()
-    model.load_state_dict(torch.load("model/weights/vgg.pth"))
+    model.load_state_dict(torch.load("model/weights/vgg19.pth"))
 
     with torch.no_grad():
         (branch1, branch2), _ = model(image)
