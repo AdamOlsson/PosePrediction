@@ -59,21 +59,17 @@ class PoseModel(nn.Module):
         self.preprocessing = VGG19FeatureExtractor()
 
         self.stage1_branch1 = Block5(channels_out=38)
-        self.stage1_branch2 = Block5(channels_out=19)
-
         self.stage2_branch1 = Block7(channels_out=38)
-        self.stage2_branch2 = Block7(channels_out=19)
-
         self.stage3_branch1 = Block7(channels_out=38)
-        self.stage3_branch2 = Block7(channels_out=19)
-
         self.stage4_branch1 = Block7(channels_out=38)
-        self.stage4_branch2 = Block7(channels_out=19)
-
         self.stage5_branch1 = Block7(channels_out=38)
-        self.stage5_branch2 = Block7(channels_out=19)
-
         self.stage6_branch1 = Block7(channels_out=38)
+
+        self.stage1_branch2 = Block5(channels_out=19)
+        self.stage2_branch2 = Block7(channels_out=19)
+        self.stage3_branch2 = Block7(channels_out=19)
+        self.stage4_branch2 = Block7(channels_out=19)
+        self.stage5_branch2 = Block7(channels_out=19)
         self.stage6_branch2 = Block7(channels_out=19)
 
 
