@@ -7,7 +7,8 @@ install_requires = [
     "pandas",
     "opencv-python",
     "numpy",
-    "matplotlib"
+    "matplotlib",
+    "scipy"
 ]
 
 packages = [
