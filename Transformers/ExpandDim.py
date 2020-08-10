@@ -7,6 +7,6 @@ class ExpandDim(object):
 
     def __call__(self, sample):
         
-        image, label = sample['image'], sample['label']
+        data, label = sample['data'], sample['label']
 
-        return {'image':np.expand_dims(image, self.dim), 'label':label}
+        return {'data':np.expand_dims(data, self.dim), 'label':label}

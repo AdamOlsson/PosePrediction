@@ -8,23 +8,23 @@ class FactorCrop(object):
         self.dest_size = dest_size
 
     def __call__(self, sample):
-        image = sample['image']
+        data = sample['data']
         
-        min_dimension = np.min(image.shape[:2])
+        min_dimension = np.min(data.shape[:2])
         
         scale_factor = float(self.dest_size) / min_dimension
 
-        image_resized = cv2.resize(image, None, fx=scale_factor, fy=scale_factor)
+        data_resized = cv2.resize(data, None, fx=scale_factor, fy=scale_factor)
 
-        h, w, c = image_resized.shape
+        h, w, c = data_resized.shape
 
         # TODO: find out the purpose of this
         h_new = int(np.ceil( h / self.factor))*self.factor
         w_new = int(np.ceil( w / self.factor))*self.factor
 
-        image_cropped = np.zeros([h_new, w_new, c], dtype=image.dtype)
-        image_cropped[:h, :w, :] = image_resized
+        data_cropped = np.zeros([h_new, w_new, c], dtype=data.dtype)
+        data_cropped[:h, :w, :] = data_resized
 
-        sample['image'] = image_cropped
+        sample['data'] = data_cropped
 
         return sample

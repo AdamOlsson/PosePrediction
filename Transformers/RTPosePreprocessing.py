@@ -6,12 +6,12 @@ class RTPosePreprocessing(object):
         pass
 
     def __call__(self, sample):
-        image = sample['image']
+        data = sample['data']
         
-        image = image.astype(np.float32)
-        image = image / 256 - 0.5
-        image = image.transpose((2, 0, 1)).astype(np.float32)
+        data = data.astype(np.float32)
+        data = data / 256 - 0.5
+        data = data.transpose((2, 0, 1)).astype(np.float32)
 
-        sample['image'] = image
+        sample['data'] = data
 
         return sample

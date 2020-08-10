@@ -8,10 +8,10 @@ class ToTensor(object):
 
     def __call__(self, sample):
         
-        image, label = sample['image'], sample['label']
+        data, label = sample['data'], sample['label']
 
         # swap color axis because
-        # numpy image: H x W x C
-        # torch image: C X H X W
-        image = image.transpose((2, 0, 1))
-        return {'image':torch.from_numpy(image), 'label':label}
+        # numpy data: H x W x C
+        # torch data: C X H X W
+        data = data.transpose((2, 0, 1))
+        return {'data':torch.from_numpy(data), 'label':label}

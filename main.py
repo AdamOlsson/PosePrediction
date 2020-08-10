@@ -50,7 +50,7 @@ if __name__ == "__main__":
     no = 1054
     transformers = [FactorCrop(config["model"]["downsample"], dest_size=config["dataset"]["image_size"]), RTPosePreprocessing(), ToRTPoseInput(0)]
     dataset = ImageDataset(path_annotations, path_data, transform=Compose(transformers))
-    image = dataset[no]['image']
+    image = dataset[no]['data']
     image_copy = dataset[no]['copy']
     
     #showRandomSample(dataset)

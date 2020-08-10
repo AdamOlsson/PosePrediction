@@ -1,7 +1,7 @@
 import numpy as np
 
 class RandomCrop(object):
-    """Crop randomly the image in a sample.
+    """Crop randomly the data in a sample.
 
     Args:
         output_size (tuple or int): Desired output size. If int, square crop
@@ -16,15 +16,15 @@ class RandomCrop(object):
             self.output_size = output_size
 
     def __call__(self, sample):
-        image, label = sample['image'], sample['label']
+        data, label = sample['data'], sample['label']
         
-        h, w = image.shape[:2]
+        h, w = data.shape[:2]
         new_h, new_w = self.output_size
 
         top = np.random.randint(0, h - new_h)
         left = np.random.randint(0, w - new_w)
 
-        cropped_image = image[top: top + new_h,
+        cropped_data = data[top: top + new_h,
                       left: left + new_w]
 
-        return {'image': cropped_image, 'label':label}
+        return {'data': cropped_data, 'label':label}
