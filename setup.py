@@ -1,4 +1,5 @@
 from setuptools import setup, find_packages
+import os
 
 install_requires = [
     "torch",
@@ -28,3 +29,9 @@ setup(name='PosePrediction',
       install_requires=install_requires,
       packages=find_packages(),
      )
+
+# Building pafprocess
+print("Building paf lib...")
+stream = os.popen('bash paf/pafprocess/make.sh')
+output = stream.read()
+print(output)
