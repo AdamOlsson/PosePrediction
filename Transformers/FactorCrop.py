@@ -15,19 +15,19 @@ class FactorCrop(object):
             min_dimension = np.min(video.shape[1:3])
             scale_factor = float(self.dest_size) / min_dimension
 
-            video_resized_buffer = np.empty((video.shape[0], video.shape[1]*scale_factor, video.shape[2]*scale_factor, video.shape[3]), dtype=video.dtype)
+            video_resized_buffer = np.empty((video.shape[0], int(video.shape[1]*scale_factor), int(video.shape[2]*scale_factor), video.shape[3]))
 
             for idx, frame in enumerate(video[:]):
                 video_resized_buffer[idx] = cv2.resize(frame, None, fx=scale_factor, fy=scale_factor)
 
-            t, h, w, c = video_resized_buffer.shape[1:]
+            t, h, w, c = video_resized_buffer.shape
 
             # TODO: find out the purpose of this
             h_new = int(np.ceil( h / self.factor))*self.factor
             w_new = int(np.ceil( w / self.factor))*self.factor
 
-            video_cropped = np.zeros([t, h_new, w_new, c], dtype=video.dtype)
-            video_cropped[t, :h, :w, :] = video_resized_buffer
+            video_cropped = np.zeros([t, h_new, w_new, c], dtype=video_resized_buffer.dtype)
+            video_cropped[:, :h, :w, :] = video_resized_buffer
 
             sample['data'] = video_cropped
 
@@ -45,7 +45,7 @@ class FactorCrop(object):
             h_new = int(np.ceil( h / self.factor))*self.factor
             w_new = int(np.ceil( w / self.factor))*self.factor
 
-            image_cropped = np.zeros([h_new, w_new, c], dtype=image.dtype)
+            image_cropped = np.zeros([h_new, w_new, c], dtype=image_resized.dtype)
             image_cropped[:h, :w, :] = image_resized
 
             sample['data'] = image_cropped

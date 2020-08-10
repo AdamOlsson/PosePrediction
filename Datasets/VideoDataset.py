@@ -5,6 +5,8 @@ import numpy as np
 import torch, torchvision
 from torch.utils.data import Dataset
 
+# debugging
+import cv2
 
 class VideoDataset(Dataset):
     def __init__(self, path_csv, path_root, transform=None):
@@ -23,13 +25,13 @@ class VideoDataset(Dataset):
 
         vid_name = self._path_root + self.annotations.iloc[idx,0]
 
-        vframes, _, _ = torchvision.io.read_video(vid_name) # Tensor[T, H, W, C]) – the T video frames
+        vframes, _, _ = torchvision.io.read_video(vid_name, pts_unit="sec") # Tensor[T, H, W, C]) – the T video frames
         label = self.annotations.iloc[idx,1]
 
-        vfames = vframes.numpy()
+        vframes = np.flip(vframes.numpy(), axis=3)
 
         sample = {'data':vframes, 'label':label, 'copy':np.copy(vframes), 'name':vid_name, 'type':'video'}
-
+        
         if self.transform:
             sample = self.transform(sample)
         
