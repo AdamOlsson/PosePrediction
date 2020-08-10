@@ -26,7 +26,7 @@ class ImageDataset(Dataset):
         img = cv2.imread(img_name) # channels are B,G,R
         label = self.annotations.iloc[idx,1]
 
-        sample = {'data':img, 'label':label, 'copy':np.copy(img), 'name':img_name}
+        sample = {'data':img, 'label':label, 'copy':np.copy(img), 'name':img_name, 'type':'image'}
 
         if self.transform:
             sample = self.transform(sample)
