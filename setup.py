@@ -8,7 +8,8 @@ install_requires = [
     "opencv-python",
     "numpy",
     "matplotlib",
-    "scipy"
+    "scipy",
+    "av"
 ]
 
 packages = [
