@@ -56,8 +56,7 @@ if __name__ == "__main__":
     transformers = [FactorCrop(config["model"]["downsample"], dest_size=config["dataset"]["image_size"]), RTPosePreprocessing(), ToRTPoseInput(0)]
 #    image_dataset = ImageDataset(image_path_annotations, image_path_data, transform=Compose(transformers))
     video_dataset = VideoDataset(video_path_annotations, video_path_data, transform=Compose(transformers))
-
-    # TODO: Make pose on video
+    
     image = image_dataset[no]['data']
     image_copy = image_dataset[no]['copy']
     
@@ -77,7 +76,9 @@ if __name__ == "__main__":
     out = draw_humans(image_copy, humans)
     cv2.imwrite('result.png', out)
 
+    # TODO: Make pose on video
     # TODO: Look at Dawids Thesis
     # TODO: Do pose prediction for video
+    # TODO: Remove background humans
     # TODO: Build a graph between frames in poses
     # TODO: Verify that downloading this package and using in another package works as intended, i.e imports.
