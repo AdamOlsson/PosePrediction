@@ -1,8 +1,9 @@
-# Installation
-pip install -r requirments.txt
 
-### TODO fix swig installation
-cd paf/pafprocess/ && sudo bash make.sh
+# Start
+## Dependencies
+swig
+## Installation
+python3 setup.py install
 
 # Big Thanks To
 https://github.com/tensorboy/pytorch_Realtime_Multi-Person_Pose_Estimation
