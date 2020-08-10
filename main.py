@@ -5,6 +5,8 @@ from torchvision.transforms import Compose
 
 from model.PoseModel import PoseModel
 from Datasets.ImageDataset import ImageDataset
+from Datasets.VideoDataset import VideoDataset
+
 
 # Transformers
 from Transformers.FactorCrop import FactorCrop
@@ -42,16 +44,22 @@ def showRandomSample(dataset):
 
 if __name__ == "__main__":
 
-    path_data = "../exercise_prediction/data/images/"
-    path_annotations = "../exercise_prediction/data/images/annotations.csv"
+    image_path_data = "../exercise_prediction/data/images/"
+    image_path_annotations = "../exercise_prediction/data/images/annotations.csv"
     
+    video_path_data = "../exercise_prediction/data/videos/"
+    video_path_annotations = "../exercise_prediction/data/videos/annotations.csv"
+
     config = load_config("config.json")
 
-    no = 1054
+    no = 10
     transformers = [FactorCrop(config["model"]["downsample"], dest_size=config["dataset"]["image_size"]), RTPosePreprocessing(), ToRTPoseInput(0)]
-    dataset = ImageDataset(path_annotations, path_data, transform=Compose(transformers))
-    image = dataset[no]['data']
-    image_copy = dataset[no]['copy']
+#    image_dataset = ImageDataset(image_path_annotations, image_path_data, transform=Compose(transformers))
+    video_dataset = VideoDataset(video_path_annotations, video_path_data, transform=Compose(transformers))
+
+    # TODO: Make pose on video
+    image = image_dataset[no]['data']
+    image_copy = image_dataset[no]['copy']
     
     #showRandomSample(dataset)
 
