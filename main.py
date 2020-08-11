@@ -27,17 +27,17 @@ import cv2
 
 if __name__ == "__main__":
 
-    device = "cuda" if torch.cuda.is_available() else "cpu"
+    device = "cpu"
 
     image_path_data = "../exercise_prediction/data/images/"
     image_path_annotations = "../exercise_prediction/data/images/annotations.csv"
     
-    video_path_data = "../exercise_prediction/data/videos/"
-    video_path_annotations = "../exercise_prediction/data/videos/annotations.csv"
+    video_path_data = "example_data/videos/"
+    video_path_annotations = "example_data/videos/annotations.csv"
 
     config = load_config("config.json")
 
-    no = 1
+    no = 0
     fs = 8
     transformers = [FactorCrop(config["model"]["downsample"], dest_size=config["dataset"]["image_size"]), RTPosePreprocessing(), ToRTPoseInput(0)]
     image_dataset = ImageDataset(image_path_annotations, image_path_data, transform=Compose(transformers), load_copy=True)
@@ -47,7 +47,8 @@ if __name__ == "__main__":
     #dataset = image_dataset
 
     data = dataset[no]['data']
-    #data_copy = dataset[no]['copy']
+    if dataset[no]['copy']:
+        data_copy = dataset[no]['copy']
 
     model = PoseModel()
     model = model.to(device)
@@ -67,9 +68,9 @@ if __name__ == "__main__":
     
     metadata = {"filename": dataset[no]['name'], "body_part_translation":body_part_translation, "body_construction":body_part_construction, "frame_skip":fs}
     save_humans("data/humans_video.json", frames, metadata)
-        
+    
+    # for images only
     #out = draw_humans(data_copy, frames[0])
-
     #cv2.imwrite('docs/result.png', out)
 
     # TODO: Look at Dawids Thesis
