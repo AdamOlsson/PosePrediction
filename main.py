@@ -27,6 +27,8 @@ import cv2
 
 if __name__ == "__main__":
 
+    device = "cuda" if torch.cuda.is_available() else "cpu"
+
     image_path_data = "../exercise_prediction/data/images/"
     image_path_annotations = "../exercise_prediction/data/images/annotations.csv"
     
@@ -41,17 +43,18 @@ if __name__ == "__main__":
     image_dataset = ImageDataset(image_path_annotations, image_path_data, transform=Compose(transformers), load_copy=True)
     video_dataset = VideoDataset(video_path_annotations, video_path_data, transform=Compose(transformers), load_copy=False, frame_skip=fs)
     
-    #dataset = video_dataset
-    dataset = image_dataset
+    dataset = video_dataset
+    #dataset = image_dataset
 
     data = dataset[no]['data']
-    data_copy = dataset[no]['copy']
+    #data_copy = dataset[no]['copy']
 
     model = PoseModel()
-    model.load_state_dict(torch.load("model/weights/vgg19.pth"))
+    model = model.to(device)
+    model.load_state_dict(torch.load("model/weights/vgg19.pth", map_location=torch.device(device)))
 
     with torch.no_grad():
-        (branch1, branch2), _ = model(data)
+        (branch1, branch2), _ = model(data.to(device))
 
     paf = branch1.data.numpy().transpose(0, 2, 3, 1)
     heatmap = branch2.data.numpy().transpose(0, 2, 3, 1)
@@ -63,12 +66,11 @@ if __name__ == "__main__":
         frames.append(humans)
     
     metadata = {"filename": dataset[no]['name'], "body_part_translation":body_part_translation, "body_construction":body_part_construction, "frame_skip":fs}
-    
-    save_humans("data/humans_image.json", frames, metadata)
+    save_humans("data/humans_video.json", frames, metadata)
+        
+    #out = draw_humans(data_copy, frames[0])
 
-    out = draw_humans(data_copy, frames[0])
-
-    cv2.imwrite('result.png', out)
+    #cv2.imwrite('result.png', out)
 
     # TODO: Look at Dawids Thesis
     # TODO: Do pose prediction for video
