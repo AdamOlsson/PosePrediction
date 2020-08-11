@@ -1,7 +1,7 @@
 from paf.common import Human, BodyPart
 import json
 
-def save_humans(frames, metadata):
+def save_humans(path, frames, metadata):
     frames_list = []
     for frame in frames:
         bodies = []
@@ -14,8 +14,8 @@ def save_humans(frames, metadata):
             body_parts = {}
             for part_id, bp in human.body_parts.items():
                 body_parts[bp.part_idx] = {
-                    "x":bp.y,
-                    "y":bp.x,
+                    "x":bp.x,
+                    "y":bp.y,
                     "score":bp.score,
                     "uidx":bp.uidx,
                 }
@@ -24,12 +24,13 @@ def save_humans(frames, metadata):
             bodies.append(body)
         frames_list.append({"bodies": bodies})
     
-    with open("data/humans.json", 'w') as f:
+    with open(path, 'w') as f:
         f.write(json.dumps({ "metadata":metadata, "frames":frames_list }, indent=4, sort_keys=True))
 
 
 def load_humans(path):
 
+    ret = {}
     with open(path) as jsfile:
         data = json.load(jsfile)
 
@@ -47,4 +48,7 @@ def load_humans(path):
             bodies.append(human)
         frames.append(bodies)
 
-    return frames
+    ret["frames"] = frames
+    ret["metadata"] = data["metadata"]
+
+    return ret
