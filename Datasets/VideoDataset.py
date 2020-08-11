@@ -5,9 +5,6 @@ import numpy as np
 import torch, torchvision
 from torch.utils.data import Dataset
 
-# debugging
-import cv2
-
 class VideoDataset(Dataset):
     def __init__(self, path_csv, path_root, transform=None):
         self._path_csv  = path_csv
