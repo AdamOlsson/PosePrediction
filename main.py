@@ -73,7 +73,6 @@ if __name__ == "__main__":
     #cv2.imwrite('docs/result.png', out)
 
     # TODO: Look at Dawids Thesis
-    # TODO: Do pose prediction for video
     # TODO: Remove background humans
     # TODO: Build a graph between frames in poses
     # TODO: Verify that downloading this package and using in another package works as intended, i.e imports.
