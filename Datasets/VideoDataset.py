@@ -29,10 +29,10 @@ class VideoDataset(Dataset):
 
         vframes = np.flip(vframes.numpy(), axis=3)
 
-        if frame_skip != 0:
-            no_frames = vframes.shpe[0]
-            selected_frames = np.linspace(0, no_frames, num=no_frames/self.frame_skip)
-            vframes = v_frames[selected_frames]
+        if self.frame_skip != 0:
+            no_frames = vframes.shape[0]
+            selected_frames = np.linspace(0, no_frames-1, num=int(no_frames/self.frame_skip), dtype=np.int)
+            vframes = vframes[selected_frames]
 
         sample = {'data':vframes, 'label':label, 'name':vid_name, 'type':'video'}
 
