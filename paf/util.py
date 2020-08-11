@@ -1,3 +1,4 @@
+from paf.common import Human, BodyPart
 import json
 
 def save_humans(frames, metadata):
@@ -23,7 +24,27 @@ def save_humans(frames, metadata):
             bodies.append(body)
         frames_list.append({"bodies": bodies})
     
-    # print(json.dumps({ "humans":people }, indent=4, sort_keys=True))
     with open("data/humans.json", 'w') as f:
         f.write(json.dumps({ "metadata":metadata, "frames":frames_list }, indent=4, sort_keys=True))
-    
+
+
+def load_humans(path):
+
+    with open(path) as jsfile:
+        data = json.load(jsfile)
+
+    frames = []
+    for frame in data["frames"]:
+        bodies = []
+        for body in frame["bodies"]:
+            human = Human([])
+            human.pairs = body["pairs"]
+            human.uidx_list = body["uidx_list"]
+            human.score = body["score"]
+            for key, body_part in body["body_parts"].items():
+                human.body_parts[int(key)] = BodyPart(body_part["uidx"], int(key), body_part["x"], body_part["y"], body_part["score"])
+            
+            bodies.append(human)
+        frames.append(bodies)
+
+    return frames
