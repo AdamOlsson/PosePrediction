@@ -6,11 +6,12 @@ import torch, torchvision
 from torch.utils.data import Dataset
 
 class VideoDataset(Dataset):
-    def __init__(self, path_csv, path_root, transform=None):
+    def __init__(self, path_csv, path_root, transform=None, load_copy=False):
         self._path_csv  = path_csv
         self._path_root = path_root
         self.annotations = pd.read_csv(path_csv)
         self.transform = transform
+        self.load_copy = load_copy
 
 
     def __len__(self):
@@ -22,12 +23,15 @@ class VideoDataset(Dataset):
 
         vid_name = self._path_root + self.annotations.iloc[idx,0]
 
-        vframes, _, _ = torchvision.io.read_video(vid_name, pts_unit="sec") # Tensor[T, H, W, C]) – the T video frames
+        vframes, _, _ = torchvision.io.read_video(vid_name, start_pts=0, end_pts=1, pts_unit="sec") # Tensor[T, H, W, C]) – the T video frames
         label = self.annotations.iloc[idx,1]
 
         vframes = np.flip(vframes.numpy(), axis=3)
 
-        sample = {'data':vframes, 'label':label, 'copy':np.copy(vframes), 'name':vid_name, 'type':'video'}
+        sample = {'data':vframes, 'label':label, 'name':vid_name, 'type':'video'}
+
+        if self.load_copy:
+            sample['copy'] = np.copy(vframes)
         
         if self.transform:
             sample = self.transform(sample)
