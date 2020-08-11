@@ -24,7 +24,7 @@ class VideoDataset(Dataset):
 
         vid_name = self._path_root + self.annotations.iloc[idx,0]
 
-        vframes, _, _ = torchvision.io.read_video(vid_name, start_pts=0, end_pts=1, pts_unit="sec") # Tensor[T, H, W, C]) – the T video frames
+        vframes, _, _ = torchvision.io.read_video(vid_name, pts_unit="sec") # Tensor[T, H, W, C]) – the T video frames
         label = self.annotations.iloc[idx,1]
 
         vframes = np.flip(vframes.numpy(), axis=3)
