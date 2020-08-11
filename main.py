@@ -29,8 +29,8 @@ if __name__ == "__main__":
 
     device = "cpu"
 
-    image_path_data = "../exercise_prediction/data/images/"
-    image_path_annotations = "../exercise_prediction/data/images/annotations.csv"
+    image_path_data = "example_data/images/"
+    image_path_annotations = "example_data/images/annotations.csv"
     
     video_path_data = "example_data/videos/"
     video_path_annotations = "example_data/videos/annotations.csv"
@@ -47,8 +47,7 @@ if __name__ == "__main__":
     #dataset = image_dataset
 
     data = dataset[no]['data']
-    if dataset[no]['copy']:
-        data_copy = dataset[no]['copy']
+    # data_copy = dataset[no]['copy']
 
     model = PoseModel()
     model = model.to(device)
