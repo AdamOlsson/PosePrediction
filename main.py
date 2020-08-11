@@ -70,7 +70,7 @@ if __name__ == "__main__":
         
     #out = draw_humans(data_copy, frames[0])
 
-    #cv2.imwrite('result.png', out)
+    #cv2.imwrite('docs/result.png', out)
 
     # TODO: Look at Dawids Thesis
     # TODO: Do pose prediction for video

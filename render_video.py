@@ -29,4 +29,4 @@ for frame_idx in range(len(vframes)):
     vframes[frame_idx] = draw_humans(vframes[frame_idx], frames[frame_idx])
 
 vframes = np.flip(vframes, axis=3).copy()
-torchvision.io.write_video("result.mp4", from_numpy(vframes), 12)
+torchvision.io.write_video("docs/result.mp4", from_numpy(vframes), 12)
