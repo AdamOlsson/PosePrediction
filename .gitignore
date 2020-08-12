@@ -3,3 +3,7 @@ Pipfile.lock
 .vscode
 ./data
 test.py
+.main.py.swp
+*.egg-info/
+dist/
+build/
