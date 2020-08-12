@@ -1,5 +1,5 @@
 Pipfile
 Pipfile.lock
 .vscode
-data/
+./data
 test.py
