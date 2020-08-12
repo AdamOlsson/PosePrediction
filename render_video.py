@@ -4,16 +4,6 @@ import numpy as np
 import torchvision, cv2
 from paf.common import draw_humans
 
-def write_video(path, video_array):
-    fourcc = cv2.VideoWriter_fourcc('m', 'p', '4', 'v')
-    out = cv2.VideoWriter(path, fourcc, 18, (video_array.shape[1], video_array.shape[2]))
-
-    for frame in video_array[:]:
-        out.write(frame)
-
-    out.release()
-    cv2.destroyAllWindows()
-
 path = "data/humans_video.json"
 data = load_humans(path)
 metadata, frames = data["metadata"], data["frames"]
@@ -29,4 +19,8 @@ for frame_idx in range(len(vframes)):
     vframes[frame_idx] = draw_humans(vframes[frame_idx], frames[frame_idx])
 
 vframes = np.flip(vframes, axis=3).copy()
-torchvision.io.write_video("docs/result.mp4", from_numpy(vframes), 12)
+
+save_path = "docs/result.mp4"
+torchvision.io.write_video(save_path, from_numpy(vframes), 12)
+
+print(save_path)
