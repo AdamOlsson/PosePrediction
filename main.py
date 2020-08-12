@@ -31,18 +31,18 @@ if __name__ == "__main__":
 
     image_path_data = "example_data/images/"
     image_path_annotations = "example_data/images/annotations.csv"
-    
+
     video_path_data = "example_data/videos/"
     video_path_annotations = "example_data/videos/annotations.csv"
 
     config = load_config("config.json")
 
     no = 0
-    fs = 8
+    fs = 6
     transformers = [FactorCrop(config["model"]["downsample"], dest_size=config["dataset"]["image_size"]), RTPosePreprocessing(), ToRTPoseInput(0)]
     image_dataset = ImageDataset(image_path_annotations, image_path_data, transform=Compose(transformers), load_copy=True)
     video_dataset = VideoDataset(video_path_annotations, video_path_data, transform=Compose(transformers), load_copy=False, frame_skip=fs)
-    
+
     dataset = video_dataset
     #dataset = image_dataset
 
