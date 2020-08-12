@@ -6,7 +6,7 @@ from torchvision.transforms import Compose
 from model.PoseModel import PoseModel
 from Datasets.ImageDataset import ImageDataset
 from Datasets.VideoDataset import VideoDataset
-
+from Datasets.VideoPredictor import VideoPredictor
 
 # Transformers
 from Transformers.FactorCrop import FactorCrop
@@ -24,6 +24,18 @@ import matplotlib.pyplot as plt
 import numpy as np
 import cv2
 
+def output_handler(outputs):
+    """ 
+    When splitting the video into batches the output from the VideoPredictor
+    is on the form [((branch1, branch2),loss),....]. This method transforms said
+    output to [branch1, branch2]. We do not care about loss.
+    """
+    branch1, branch2 = [], []
+    for ((b1,b2),_) in outputs:
+        branch1.append(b1)
+        branch2.append(b2)
+
+    return torch.cat(branch1, 0), torch.cat(branch2, 0)
 
 if __name__ == "__main__":
 
@@ -38,23 +50,28 @@ if __name__ == "__main__":
     config = load_config("config.json")
 
     no = 0
-    fs = 6
+    fs = 4
     transformers = [FactorCrop(config["model"]["downsample"], dest_size=config["dataset"]["image_size"]), RTPosePreprocessing(), ToRTPoseInput(0)]
-    image_dataset = ImageDataset(image_path_annotations, image_path_data, transform=Compose(transformers), load_copy=True)
+    #image_dataset = ImageDataset(image_path_annotations, image_path_data, transform=Compose(transformers), load_copy=True)
     video_dataset = VideoDataset(video_path_annotations, video_path_data, transform=Compose(transformers), load_copy=False, frame_skip=fs)
 
-    dataset = video_dataset
-    #dataset = image_dataset
-
-    data = dataset[no]['data']
-    # data_copy = dataset[no]['copy']
+    #dataset = video_dataset
 
     model = PoseModel()
     model = model.to(device)
     model.load_state_dict(torch.load("model/weights/vgg19.pth", map_location=torch.device(device)))
 
+    video_predictor = VideoPredictor(model, video_dataset, 8, device, output_handler=output_handler)
+
     with torch.no_grad():
-        (branch1, branch2), _ = model(data.to(device))
+        (branch1, branch2) = video_predictor.predict(no)
+
+    print(branch1.shape)
+    print(branch2.shape)
+    # branch1.shape = torch.Size([1, 38, 82, 46])
+    # branch2.shape = torch.Size([1, 19, 82, 46])
+
+    exit()
 
     paf = branch1.data.cpu().numpy().transpose(0, 2, 3, 1)
     heatmap = branch2.data.cpu().numpy().transpose(0, 2, 3, 1)

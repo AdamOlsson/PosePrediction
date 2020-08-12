@@ -27,15 +27,15 @@ class VideoPredictor():
         batch_size = int(no_frames/self.no_batches)
 
         outputs = []
-        for i in range(no_batches+1):
-            if i == no_batches: 
+        for i in range(self.no_batches+1):
+            if i == self.no_batches: 
                 # Once the final batch is reached, the rest of the frames are predicted
                 batch = data[i*batch_size:]
             else:
                 batch = data[i*batch_size:(i+1)*batch_size]
 
                 output = self.model(batch)
-                outputs.append(output)
+                outputs.append(output) # TODO: Find out if tensors are cast to cpu
 
         if self.output_handler:
             return self.output_handler(outputs)
