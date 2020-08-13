@@ -17,29 +17,7 @@ Once swig is installed and the repository is cloned, run:
 python3 setup.py install
 ```
 
-from the root directory. The setup script will install python dependencies and build binaries for the Part Affinity Fields code. If the user would like to use pre-trained network weights, [git-lfs](https://github.com/git-lfs/git-lfs/wiki/Installation) needs to be installed. To install git-lfs on Linux run:
-
-```
-curl -s https://packagecloud.io/install/repositories/github/git-lfs/script.deb.sh | sudo bash
-```
-
-```
-sudo apt-get install git-lfs
-```
-
-```
-git lfs install
-```
-From this repository, pull the network weights using:
-```
-git lfs fetch && git lfs pull
-```
-
-**Note**: On some systems git-lfs can force user to enter their username and password for every file they wish to push. Read more about this issue [here](https://github.com/git-lfs/git-lfs/issues/2014). Should this happen, run:
-
-```
-git config --global credential.helper 'cache --timeout=3600'
-```
+from the root directory. The setup script will install python dependencies and build binaries for the Part Affinity Fields code.
 
 # Limitations
 
