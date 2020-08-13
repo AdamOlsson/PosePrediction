@@ -23081,6 +23081,11 @@
             "18": "Background"
         },
         "filename": "example_data/videos/data/video_483@13-01-2020_11-00-37.mp4",
-        "frame_skip": 1
+        "frame_skip": 1,
+        "info": {
+            "audio_fps": 48000,
+            "video_fps": 30.02250534963229
+        },
+        "label": "snatch"
     }
 }
