@@ -79,7 +79,7 @@ if __name__ == "__main__":
         frames.append(humans)
 
     save_file = "data/humans_{}.json".format(video_dataset[no]['type'])
-    metadata = {"filename": video_dataset[no]['name'], "body_part_translation":body_part_translation, "body_construction":body_part_construction, "frame_skip":fs}
+    metadata = {"filename": video_dataset[no]['name'], "body_part_translation":body_part_translation, "body_construction":body_part_construction, "frame_skip":fs, "label":video_dataset[no]['label']}
     save_humans(save_file, frames, metadata)
     print(save_file)
 
@@ -88,7 +88,9 @@ if __name__ == "__main__":
     #cv2.imwrite('results/result.png', out)
 
     # TODO: Look at Dawids Thesis
-    # TODO: Add git lfs to setup
+    # TODO: When the graphs are connected temporally, I might need to add a 3d dimension. Preferebly this would
+    #       be time in seconds. Is there metadata about a video so I can get the recorded fps and this the time 
+    #       between frames?
     # TODO: Remove background humans
     # TODO: Build a graph between frames in poses
     # TODO: Verify that downloading this package and using in another package works as intended, i.e imports.
