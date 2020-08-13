@@ -79,7 +79,7 @@ if __name__ == "__main__":
         frames.append(humans)
 
     save_file = "data/humans_{}.json".format(video_dataset[no]['type'])
-    metadata = {"filename": video_dataset[no]['name'], "body_part_translation":body_part_translation, "body_construction":body_part_construction, "frame_skip":fs, "label":video_dataset[no]['label']}
+    metadata = {"filename": video_dataset[no]['name'], "body_part_translation":body_part_translation, "body_construction":body_part_construction, "frame_skip":fs, "label":video_dataset[no]['label'], "info":video_dataset[no]['info']}
     save_humans(save_file, frames, metadata)
     print(save_file)
 
