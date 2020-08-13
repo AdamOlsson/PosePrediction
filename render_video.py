@@ -15,14 +15,12 @@ no_frames = vframes.shape[0]
 selected_frames = np.linspace(0, no_frames-1, num=int(no_frames/metadata["frame_skip"]), dtype=np.int)
 vframes = vframes[selected_frames]
 
-print(vframes.shape)
-print(len(frames))
 for frame_idx in range(len(vframes)):
     vframes[frame_idx] = draw_humans(vframes[frame_idx], frames[frame_idx])
 
 vframes = np.flip(vframes, axis=3).copy()
 
 save_path = "docs/result.mp4"
-torchvision.io.write_video(save_path, from_numpy(vframes), 30)
+torchvision.io.write_video(save_path, from_numpy(vframes), 48)
 
 print(save_path)
