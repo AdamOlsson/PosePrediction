@@ -85,7 +85,7 @@ if __name__ == "__main__":
 
     # for images only
     #out = draw_humans(data_copy, frames[0])
-    #cv2.imwrite('docs/result.png', out)
+    #cv2.imwrite('results/result.png', out)
 
     # TODO: Look at Dawids Thesis
     # TODO: Add git lfs to setup

@@ -20,7 +20,7 @@ for frame_idx in range(len(vframes)):
 
 vframes = np.flip(vframes, axis=3).copy()
 
-save_path = "docs/result.mp4"
+save_path = "results/result.mp4"
 torchvision.io.write_video(save_path, from_numpy(vframes), 48)
 
 print(save_path)
