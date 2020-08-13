@@ -33,9 +33,9 @@ class VideoPredictor():
                 batch = data[i*batch_size:]
             else:
                 batch = data[i*batch_size:(i+1)*batch_size]
-
-                output = self.model(batch)
-                outputs.append(output) # TODO: Find out if tensors are cast to cpu
+            
+            output = self.model(batch)
+            outputs.append(output) # TODO: Find out if tensors are cast to cpu
 
         if self.output_handler:
             return self.output_handler(outputs)

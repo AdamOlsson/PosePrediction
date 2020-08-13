@@ -66,12 +66,8 @@ if __name__ == "__main__":
     with torch.no_grad():
         (branch1, branch2) = video_predictor.predict(no)
 
-    print(branch1.shape)
-    print(branch2.shape)
     # branch1.shape = torch.Size([1, 38, 82, 46])
     # branch2.shape = torch.Size([1, 19, 82, 46])
-
-    exit()
 
     paf = branch1.data.cpu().numpy().transpose(0, 2, 3, 1)
     heatmap = branch2.data.cpu().numpy().transpose(0, 2, 3, 1)
@@ -82,8 +78,8 @@ if __name__ == "__main__":
         humans = paf_to_pose_cpp(heatmap[frame], paf[frame], config)
         frames.append(humans)
 
-    save_file = "data/humans_{}.json".format(dataset[no]['type'])
-    metadata = {"filename": dataset[no]['name'], "body_part_translation":body_part_translation, "body_construction":body_part_construction, "frame_skip":fs}
+    save_file = "data/humans_{}.json".format(video_dataset[no]['type'])
+    metadata = {"filename": video_dataset[no]['name'], "body_part_translation":body_part_translation, "body_construction":body_part_construction, "frame_skip":fs}
     save_humans(save_file, frames, metadata)
     print(save_file)
 
