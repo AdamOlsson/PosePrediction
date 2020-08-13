@@ -50,7 +50,7 @@ if __name__ == "__main__":
     config = load_config("config.json")
 
     no = 0
-    fs = 4
+    fs = 1
     transformers = [FactorCrop(config["model"]["downsample"], dest_size=config["dataset"]["image_size"]), RTPosePreprocessing(), ToRTPoseInput(0)]
     #image_dataset = ImageDataset(image_path_annotations, image_path_data, transform=Compose(transformers), load_copy=True)
     video_dataset = VideoDataset(video_path_annotations, video_path_data, transform=Compose(transformers), load_copy=False, frame_skip=fs)
@@ -61,7 +61,7 @@ if __name__ == "__main__":
     model = model.to(device)
     model.load_state_dict(torch.load("model/weights/vgg19.pth", map_location=torch.device(device)))
 
-    video_predictor = VideoPredictor(model, video_dataset, 8, device, output_handler=output_handler)
+    video_predictor = VideoPredictor(model, video_dataset, 32, device, output_handler=output_handler)
 
     with torch.no_grad():
         (branch1, branch2) = video_predictor.predict(no)
