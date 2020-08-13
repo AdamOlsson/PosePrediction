@@ -21,7 +21,7 @@ packages = [
     "model.FeatureExtractors",
     "util"
 ]
-
+# Install dependencies
 setup(name='PosePrediction',
       version='0.1',
       description='Human pose prediction using graphs',
@@ -33,7 +33,8 @@ setup(name='PosePrediction',
      )
 
 # Building pafprocess
-print("Building paf lib...")
+print("\nBuilding paf lib...")
 stream = os.popen('bash paf/pafprocess/make.sh')
 output = stream.read()
 print(output)
+
