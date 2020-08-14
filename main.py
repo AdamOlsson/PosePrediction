@@ -41,11 +41,11 @@ if __name__ == "__main__":
 
     device = "cuda"
 
-    image_path_data = "example_data/images/"
-    image_path_annotations = "example_data/images/annotations.csv"
+    image_path_data = "data/images/"
+    image_path_annotations = "data/images/annotations.csv"
 
-    video_path_data = "example_data/videos/"
-    video_path_annotations = "example_data/videos/annotations.csv"
+    video_path_data = "data/videos/"
+    video_path_annotations = "data/videos/annotations.csv"
 
     config = load_config("config.json")
 
@@ -78,7 +78,7 @@ if __name__ == "__main__":
         humans = paf_to_pose_cpp(heatmap[frame], paf[frame], config)
         frames.append(humans)
 
-    save_file = "data/humans_{}.json".format(video_dataset[no]['type'])
+    save_file = "data/graphs/humans_{}.json".format(video_dataset[no]['type'])
     metadata = {"filename": video_dataset[no]['name'], "body_part_translation":body_part_translation, "body_construction":body_part_construction, "frame_skip":fs, "label":video_dataset[no]['label'], "info":video_dataset[no]['info']}
     save_humans(save_file, frames, metadata)
     print(save_file)

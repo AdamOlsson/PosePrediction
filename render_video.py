@@ -4,7 +4,7 @@ import numpy as np
 import torchvision, cv2
 from paf.common import draw_humans
 
-path = "data/humans_video.json"
+path = "data/graphs/humans_video.json"
 data = load_humans(path)
 metadata, frames = data["metadata"], data["frames"]
 
