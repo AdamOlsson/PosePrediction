@@ -91,7 +91,6 @@ if __name__ == "__main__":
     # TODO: When the graphs are connected temporally, I might need to add a 3d dimension. Preferebly this would
     #       be time in seconds. Is there metadata about a video so I can get the recorded fps and this the time 
     #       between frames?
-    # TODO: Change save format to MMSkeleton read
     # TODO: Remove background humans
     # TODO: Build a graph between frames in poses
     # TODO: Verify that downloading this package and using in another package works as intended, i.e imports.
