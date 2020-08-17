@@ -10,7 +10,6 @@ def save_humans(path, frames, metadata):
             body['pairs'] = human.pairs
             body["uidx_list"] = list(human.uidx_list)
             body["score"] = human.score
-            body["frame_id"] = i
 
             body_parts = {}
             for part_id, bp in human.body_parts.items():
@@ -23,7 +22,7 @@ def save_humans(path, frames, metadata):
             body["body_parts"] = body_parts
 
             bodies.append(body)
-        frames_list.append({"bodies": bodies})
+        frames_list.append({"bodies": bodies, "frame_id":i})
     
     with open(path, 'w') as f:
         f.write(json.dumps({ "metadata":metadata, "frames":frames_list }, indent=4, sort_keys=True))
