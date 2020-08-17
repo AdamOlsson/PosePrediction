@@ -3,13 +3,14 @@ import json
 
 def save_humans(path, frames, metadata):
     frames_list = []
-    for frame in frames:
+    for i, frame in enumerate(frames):
         bodies = []
         for human in frame:
             body = {}
             body['pairs'] = human.pairs
             body["uidx_list"] = list(human.uidx_list)
             body["score"] = human.score
+            body["frame_id"] = i
 
             body_parts = {}
             for part_id, bp in human.body_parts.items():
