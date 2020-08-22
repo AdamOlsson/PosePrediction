@@ -6,7 +6,7 @@ import torch, torchvision
 from torch.utils.data import Dataset
 
 class VideoDataset(Dataset):
-    def __init__(self, path_csv, path_root, transform=None, load_copy=False, frame_skip=0):
+    def __init__(self, path_csv, path_root, transform=None, load_copy=False, frame_skip=1):
         self._path_csv  = path_csv
         self._path_root = path_root
         self.annotations = pd.read_csv(path_csv)

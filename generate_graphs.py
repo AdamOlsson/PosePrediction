@@ -1,4 +1,3 @@
-
 """
 This script generates graphs for human pose prediction. It assumes that the in the data directory,
 there exists a file called "annotations.csv" that contains paths and labels to all videos in the dataset.
@@ -26,16 +25,48 @@ The annotations file will have the follow format:
 Usage:
 python generate_graphs.py --data_dir <path to data root> --out_dir <path to output dir>
 """
+# torch & torchvision
+import torch
+#from torch.utils.data.dataloader import DataLoader
+from torchvision.transforms import Compose
 
+# model & datasets
+from model.PoseModel import PoseModel
+from Datasets.VideoDataset import VideoDataset
+from Datasets.VideoPredictor import VideoPredictor
 
+# Transformers
+from Transformers.FactorCrop import FactorCrop
+from Transformers.RTPosePreprocessing import RTPosePreprocessing
+from Transformers.ToRTPoseInput import ToRTPoseInput
+
+# util
+from util.load_config import load_config 
+
+# native
 import sys, getopt
 from shutil import rmtree
 from os.path import exists, join
 from os import makedirs, mkdir
+
+# misc
 import pandas as pd # easy load of csv
 
-def generate_graphs():
-    pass
+def generate_graphs(input_dir, output_dir, device="cpu"):
+    print("\n############   Starting graph generation    ############\n")
+
+    config = load_config("config.json")
+
+    annotations_file = join(output_dir, "annotations.csv")
+
+    #no = 0
+    fs = 1
+    transformers = [FactorCrop(config["model"]["downsample"], dest_size=config["dataset"]["image_size"]), RTPosePreprocessing(), ToRTPoseInput(0)]
+    video_dataset = VideoDataset(annotations_file, input_dir, transform=Compose(transformers), load_copy=False, frame_skip=fs)
+
+
+    print("\n###############   Graph generation done   ##############\n")
+
 
 def setup(input_dir, output_dir):
     """ Setup structure of the output directory. """
@@ -91,3 +122,4 @@ def parse_args(argv):
 if __name__ == "__main__":
     input_dir, output_dir = parse_args(sys.argv[1:])
     setup(input_dir, output_dir)
+    generate_graphs(input_dir, output_dir, device="cuda")
