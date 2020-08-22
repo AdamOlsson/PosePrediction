@@ -11,17 +11,15 @@ class VideoPredictor():
     into a list. A user can provide an output handler to fix these outputs into a preferable
     format. 
     """
-    def __init__(self, model, dataset, no_batches, device, output_handler=None):
-        self.dataset = dataset
+    def __init__(self, model, no_batches, device, output_handler=None):
         self.model = model
         self.no_batches = no_batches
         self.device = device
         self.output_handler = output_handler
 
 
-    def predict(self, video_idx):
-        data = self.dataset[video_idx]['data']
-        data = data.to(self.device)
+    def predict(self, sample):
+        data = sample.to(self.device)
 
         no_frames = data.shape[0]
         batch_size = int(no_frames/self.no_batches)

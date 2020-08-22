@@ -58,10 +58,10 @@ if __name__ == "__main__":
     model = model.to(device)
     model.load_state_dict(torch.load("model/weights/vgg19.pth", map_location=torch.device(device)))
  
-    video_predictor = VideoPredictor(model, video_dataset, 64, device, output_handler=output_handler)
+    video_predictor = VideoPredictor(model, 64, device, output_handler=output_handler)
 
     with torch.no_grad():
-        (branch1, branch2) = video_predictor.predict(no)
+        (branch1, branch2) = video_predictor.predict(sample["data"])
 
 
     paf = branch1.data.cpu().numpy().transpose(0, 2, 3, 1)

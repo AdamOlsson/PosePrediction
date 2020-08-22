@@ -27,7 +27,6 @@ python generate_graphs.py --data_dir <path to data root> --out_dir <path to outp
 """
 # torch & torchvision
 import torch
-#from torch.utils.data.dataloader import DataLoader
 from torchvision.transforms import Compose
 
 # model & datasets
@@ -53,16 +52,45 @@ from os import makedirs, mkdir
 import pandas as pd # easy load of csv
 
 def generate_graphs(input_dir, output_dir, device="cpu"):
+    def output_handler(outputs):
+        """ 
+        When splitting the video into batches the output from the VideoPredictor
+        is on the form [((branch1, branch2),loss),....]. This method transforms said
+        output to [branch1, branch2]. We do not care about loss.
+        """
+        branch1, branch2 = [], []
+        for ((b1,b2),_) in outputs:
+            branch1.append(b1)
+            branch2.append(b2)
+
+        return torch.cat(branch1, 0), torch.cat(branch2, 0)
+
     print("\n############   Starting graph generation    ############\n")
 
     config = load_config("config.json")
 
     annotations_file = join(output_dir, "annotations.csv")
 
-    #no = 0
-    fs = 1
+    print("Loading dataset...")
     transformers = [FactorCrop(config["model"]["downsample"], dest_size=config["dataset"]["image_size"]), RTPosePreprocessing(), ToRTPoseInput(0)]
-    video_dataset = VideoDataset(annotations_file, input_dir, transform=Compose(transformers), load_copy=False, frame_skip=fs)
+    video_dataset = VideoDataset(annotations_file, input_dir, transform=Compose(transformers), load_copy=False)
+
+    model = PoseModel()
+    model = model.to(device)
+    model.load_state_dict(torch.load("model/weights/vgg19.pth", map_location=torch.device(device)))
+
+    print("Setup of video predictor to reduce RAM or VRAM (cpu or gpu) usage...")
+    no_video_subsets = 64
+    video_predictor = VideoPredictor(model, no_video_subsets, device, output_handler=output_handler)
+
+    for sample_idx in range(len(video_dataset)):
+        sample = video_dataset[sample_idx]
+        with torch.no_grad():
+            (branch1, branch2) = video_predictor.predict(sample["data"])
+
+        paf = branch1.data.cpu().numpy().transpose(0, 2, 3, 1)
+        heatmap = branch2.data.cpu().numpy().transpose(0, 2, 3, 1)
+
 
 
     print("\n###############   Graph generation done   ##############\n")
@@ -122,4 +150,4 @@ def parse_args(argv):
 if __name__ == "__main__":
     input_dir, output_dir = parse_args(sys.argv[1:])
     setup(input_dir, output_dir)
-    generate_graphs(input_dir, output_dir, device="cuda")
+    # generate_graphs(input_dir, output_dir, device="cuda")
