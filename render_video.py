@@ -4,7 +4,7 @@ import numpy as np
 import torchvision, cv2
 from paf.common import draw_humans
 
-path = "data/graphs/humans_video.json"
+path = "data/graphs/videos/humans_video.json"
 data = load_humans(path)
 metadata, frames = data["metadata"], data["frames"]
 
@@ -21,6 +21,6 @@ for frame_idx in range(len(vframes)):
 vframes = np.flip(vframes, axis=3).copy()
 
 save_path = "results/result.mp4"
-torchvision.io.write_video(save_path, from_numpy(vframes), int(metadata["info"]["fps"]))
+torchvision.io.write_video(save_path, from_numpy(vframes), int(metadata["video_properties"]["video_fps"]))
 
 print(save_path)

@@ -73,14 +73,14 @@ if __name__ == "__main__":
         humans = paf_to_pose_cpp(heatmap[frame], paf[frame], config)
         frames.append(humans)
 
-    save_file = "data/graphs/{}/humans_{}.json".format(sample['type'], sample['type'])
+    save_file = "data/graphs/{}s/humans_{}.json".format(sample['type'], sample['type'])
     metadata = {
         "filename": sample['name'],
         "body_part_translation":body_part_translation,
         "body_construction":body_part_construction,
         "frame_skip":fs,
         "label":sample['label'],
-        "video_properties":sample['video_properties']
+        "video_properties":sample['properties']
     }
 
     save_humans(save_file, frames, metadata)
