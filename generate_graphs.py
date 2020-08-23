@@ -69,7 +69,7 @@ def generate_graphs(input_dir, output_dir, device="cpu"):
         return torch.cat(branch1, 0), torch.cat(branch2, 0)
 
     print("\n############   Starting graph generation    ############\n")
-
+    print("Using device {}".format(device))
     config = load_config("config.json")
 
     annotations_file_input  = join(input_dir, "annotations.csv")
@@ -91,7 +91,7 @@ def generate_graphs(input_dir, output_dir, device="cpu"):
     print("Starting generations of graphs...")
     for sample_idx in range(len(video_dataset)):
         sample = video_dataset[sample_idx]
-        
+        exit()
         sample_name       = sample["name"]
         sample_label      = sample["label"]
         sample_properties = sample["properties"]
