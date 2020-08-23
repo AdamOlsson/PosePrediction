@@ -12,6 +12,8 @@ class FactorCrop(object):
         def FactorCropVideo():
             video = sample['data']
 
+            del sample['data']
+
             min_dimension = np.min(video.shape[1:3])
             scale_factor = float(self.dest_size) / min_dimension
 
@@ -19,6 +21,8 @@ class FactorCrop(object):
 
             for idx, frame in enumerate(video[:]):
                 video_resized_buffer[idx] = cv2.resize(frame, None, fx=scale_factor, fy=scale_factor)
+            
+            del video
 
             t, h, w, c = video_resized_buffer.shape
 
