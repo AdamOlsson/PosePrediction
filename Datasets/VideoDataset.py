@@ -34,7 +34,7 @@ class VideoDataset(Dataset):
             selected_frames = np.linspace(0, no_frames-1, num=int(no_frames/self.frame_skip), dtype=np.int)
             vframes = vframes[selected_frames]
 
-        sample = {'data':vframes, 'label':label, 'name':vid_name, 'type':'video', "info":info}
+        sample = {'data':vframes, 'label':label, 'name':vid_name, 'type':'video', "properties":info}
 
         if self.load_copy:
             sample['copy'] = np.copy(vframes)

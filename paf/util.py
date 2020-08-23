@@ -12,7 +12,7 @@ def save_humans(path, frames, metadata):
             body["score"] = human.score
 
             body_parts = {}
-            for part_id, bp in human.body_parts.items():
+            for _, bp in human.body_parts.items():
                 body_parts[bp.part_idx] = {
                     "x":bp.x,
                     "y":bp.y,

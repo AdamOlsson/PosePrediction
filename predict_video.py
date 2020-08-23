@@ -80,7 +80,7 @@ if __name__ == "__main__":
         "body_construction":body_part_construction,
         "frame_skip":fs,
         "label":sample['label'],
-        "info":sample['info']
+        "video_properties":sample['video_properties']
     }
 
     save_humans(save_file, frames, metadata)
