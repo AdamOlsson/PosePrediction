@@ -26,8 +26,12 @@ class FactorCrop(object):
             h_new = int(np.ceil( h / self.factor))*self.factor
             w_new = int(np.ceil( w / self.factor))*self.factor
 
+            print("Cropping image, this may take some time...")
+            # Due to memory constarints, we crop frames one by one
             video_cropped = np.zeros([t, h_new, w_new, c], dtype=video_resized_buffer.dtype)
-            video_cropped[:, :h, :w, :] = video_resized_buffer
+            for i in range(t):
+                video_cropped[i, :h, :w, :] = video_resized_buffer[0]
+                video_resized_buffer = np.delete(video_resized_buffer, 0, 0)
 
             sample['data'] = video_cropped
 
