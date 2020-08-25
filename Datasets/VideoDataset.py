@@ -2,6 +2,8 @@ import pandas as pd # easy load of csv
 import cv2
 import numpy as np
 
+from os.path import join
+
 import torch, torchvision
 from torch.utils.data import Dataset
 
@@ -22,7 +24,7 @@ class VideoDataset(Dataset):
         if torch.is_tensor(idx):
             idx = idx.tolist()
 
-        vid_name = self._path_root + self.annotations.iloc[idx,0]
+        vid_name = join(self._path_root,self.annotations.iloc[idx,0])
 
         vframes, _, info = torchvision.io.read_video(vid_name, pts_unit="sec") # Tensor[T, H, W, C]) – the T video frames
         label = self.annotations.iloc[idx,1]

@@ -16,23 +16,23 @@
 ## 
 ## The annotations file will have the follow format:
 ## 
-## # path, label
-## <path1>,<label>
-## <path2>,<label>
+## # path,label,frames
+## <path1>,<label>,<no_frames>
+## <path2>,<label>,<no_frames>
 ## ...
 ## 
 ## The output from this file is the path to the preprocessed datas root directory to allow for Linux
 ## based piping.
 ## 
 ## Usage:
-## python generate_graphs.py --data_dir <path to data root> --out_dir <path to output dir>
-
-import sys
-sys.path.append("../..") # append project root dir
+## python factorcrop.py --data_dir <path to data root> --out_dir <path to output dir>
 
 from Datasets.VideoDataset import VideoDataset
 from Transformers.FactorCrop import FactorCrop
 from Transformers.WriteVideoToDisc import WriteVideoToDisc
+
+from torch.utils.data.dataloader import DataLoader
+from torchvision.transforms import Compose
 
 from util.load_config import load_config
 
@@ -47,14 +47,22 @@ import pandas as pd # easy load of csv
 
 def main(input_dir, output_dir):
     
-    config = load_config("../../config.json")
+    config = load_config("config.json")
 
-    annotations = join(input_dir, "annotations.csv")
+    annotations_in = join(input_dir, "annotations.csv")
+    annotations_out = join(output_dir, "annotations.csv")
+
     transformers = [
         FactorCrop(config["model"]["downsample"], dest_size=config["dataset"]["image_size"]),
-        WriteVideoToDisc(write_loc=join(input_dir, "data"), path_annotations=annotations)
+        WriteVideoToDisc(write_loc=join(output_dir, "data"), path_annotations=annotations_out)
         ]
-    dataset = VideoDataset(annotations, input_dir, transform=transformers)
+    dataset = VideoDataset(annotations_in, input_dir, transform=Compose(transformers))
+    # dataloader = DataLoader(dataset, 1, False)
+    
+    for s in range(len(dataset)):
+        print(dataset[s]["data"].shape)
+        exit()
+
 
 def setup(input_dir, output_dir):
     ## Setup structure of the output directory.
@@ -103,6 +111,7 @@ def parse_args(argv):
 
 
 if __name__ == "__main__":
+    # NOTE: Paths needs to relative, torchvision does not handle absolute paths
     input_dir, output_dir = parse_args(sys.argv[1:])
     output_dir = setup(input_dir, output_dir)
     main(input_dir, output_dir)
