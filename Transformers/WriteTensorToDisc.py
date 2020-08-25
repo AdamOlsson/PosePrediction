@@ -10,17 +10,21 @@ class WriteTensorToDisc(object):
 
     def __call__(self, sample):
         
-        name, ext = splitext(basename(sample["name"]))
-        save_file = join("data", sample["label"], name + "_preprocessed" + ext)
-
-        video_tensor = np.flip(sample["data"], axis=3).copy()
+        name, _ = splitext(basename(sample["name"]))
+        base = name + ".pt"
+        save_file = join("data", sample["label"], base)
         
-        filesystem_name = join(self.write_loc, sample["label"], name + "_preprocessed" + ext)
+        filesystem_name = join(self.write_loc, sample["label"], base)
 
-        torch.save(video_tensor, filesystem_name)
+        torch.save(sample["data"], filesystem_name)
 
         with open(self.annotations, "a") as f:
-            f.write("{},{},{}\n".format(save_file, sample["label"], video_tensor.shape))
+            f.write("{},{},{}\n".format(save_file, sample["label"], "({},{},{},{})".format(
+                sample["data"].shape[0],
+                sample["data"].shape[1],
+                sample["data"].shape[2],
+                sample["data"].shape[3]
+            )))
         
         return sample
 

@@ -32,9 +32,7 @@ class FactorCrop(object):
 
             # Due to memory constarints, we crop frames one by one
             video_cropped = np.zeros([t, h_new, w_new, c], dtype=video_resized_buffer.dtype)
-            for i in range(t):
-                video_cropped[i, :h, :w, :] = video_resized_buffer[0]
-                video_resized_buffer = np.delete(video_resized_buffer, 0, 0)
+            video_cropped[:, :h, :w, :] = video_resized_buffer
 
             sample['data'] = video_cropped
 

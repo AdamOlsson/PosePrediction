@@ -1,6 +1,6 @@
 ## 
-## This script achieves exactly the same as Transformers/FactorCrop.py. Due to memory constrainsts, preprocessing
-## has to be done in steps. The script assumes that there is a file called annotations.csv in the input directory.
+## Due to memory constrainsts, preprocessing has to be done in steps. The script 
+## assumes that there is a file called annotations.csv in the input directory.
 ## 
 ## The outout directory will have the following format:
 ## 
@@ -29,7 +29,9 @@
 
 from Datasets.VideoDataset import VideoDataset
 from Transformers.FactorCrop import FactorCrop
-from Transformers.WriteVideoToDisc import WriteVideoToDisc
+from Transformers.RTPosePreprocessing import RTPosePreprocessing
+from Transformers.ToRTPoseInput import ToRTPoseInput
+from Transformers.WriteTensorToDisc import WriteTensorToDisc
 
 from torch.utils.data.dataloader import DataLoader
 from torchvision.transforms import Compose
@@ -54,15 +56,16 @@ def main(input_dir, output_dir):
 
     transformers = [
         FactorCrop(config["model"]["downsample"], dest_size=config["dataset"]["image_size"]),
-        WriteVideoToDisc(write_loc=join(output_dir, "data"), path_annotations=annotations_out)
+        RTPosePreprocessing(),
+        ToRTPoseInput(0),
+        WriteTensorToDisc(write_loc=join(output_dir, "data"), path_annotations=annotations_out)
         ]
+        
     dataset = VideoDataset(annotations_in, input_dir, transform=Compose(transformers))
-    # dataloader = DataLoader(dataset, 1, False)
+    dataloader = DataLoader(dataset, 1, False, num_workers=0)
     
-    for s in range(len(dataset)):
-        print(dataset[s]["data"].shape)
-        exit()
-
+    for _, s in enumerate(dataloader):
+        print(s["name"])
 
 def setup(input_dir, output_dir):
     ## Setup structure of the output directory.
@@ -87,7 +90,7 @@ def setup(input_dir, output_dir):
 
     annotations_out = join(data_out_root, "annotations.csv") 
     with open(annotations_out,'w+') as f:
-        f.write("# filename,label,frames\n") # Header
+        f.write("# filename,label,shape\n") # Header
 
     return data_out_root 
 
