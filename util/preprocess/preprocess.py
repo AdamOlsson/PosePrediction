@@ -16,9 +16,9 @@
 ## 
 ## The annotations file will have the follow format:
 ## 
-## # path,label,frames
-## <path1>,<label>,<no_frames>
-## <path2>,<label>,<no_frames>
+## # path,label,subsets,subset_len
+## <path1>,<label>,...
+## <path2>,<label>,...
 ## ...
 ## 
 ## The output from this file is the path to the preprocessed datas root directory to allow for Linux
@@ -27,13 +27,11 @@
 ## Usage:
 ## python factorcrop.py --data_dir <path to data root> --out_dir <path to output dir>
 
-from Datasets.VideoDataset import VideoDataset
+from torchvision.datasets.video_utils import VideoClips
 from Transformers.FactorCrop import FactorCrop
 from Transformers.RTPosePreprocessing import RTPosePreprocessing
 from Transformers.ToRTPoseInput import ToRTPoseInput
-from Transformers.WriteTensorToDisc import WriteTensorToDisc
 
-from torch.utils.data.dataloader import DataLoader
 from torchvision.transforms import Compose
 
 from util.load_config import load_config
@@ -43,6 +41,8 @@ import sys, getopt
 from shutil import rmtree
 from os.path import exists, join, basename, splitext
 from os import makedirs, mkdir
+
+import torch
 
 # misc
 import pandas as pd # easy load of csv
@@ -54,18 +54,62 @@ def main(input_dir, output_dir):
     annotations_in = join(input_dir, "annotations.csv")
     annotations_out = join(output_dir, "annotations.csv")
 
+    annotations = pd.read_csv(annotations_in)
+    labels = list(annotations.iloc[:,1])
+
+    subset_size = 32
+    video_names = [join(input_dir, annotations.iloc[i,0]) for i in range(len(annotations))]
+    videoclips = VideoClips(video_names, clip_length_in_frames=subset_size, frames_between_clips=subset_size)
+
     transformers = [
         FactorCrop(config["model"]["downsample"], dest_size=config["dataset"]["image_size"]),
         RTPosePreprocessing(),
         ToRTPoseInput(0),
-        WriteTensorToDisc(write_loc=join(output_dir, "data"), path_annotations=annotations_out)
         ]
+
+    composed = Compose(transformers)
+    counter, sample = {}, {}
+    vframes = None
+    old_video_idx = 0
+    for i in range(len(videoclips)):
+        vframes,_,_, video_idx = videoclips.get_clip(i)
+
+        label = labels[video_idx]
+
+        video_name = basename(video_names[video_idx])
+        video_dir = join(output_dir, "data", label, video_name)
+
+        if not exists(video_dir):
+            mkdir(video_dir)
         
-    dataset = VideoDataset(annotations_in, input_dir, transform=Compose(transformers))
-    dataloader = DataLoader(dataset, 1, False, num_workers=0)
-    
-    for _, s in enumerate(dataloader):
-        print(s["name"])
+        if str(video_idx) in counter:
+            counter[str(video_idx)] += 1
+        else: 
+            counter[str(video_idx)] = 0
+
+        save_name = join(video_dir, str(counter[str(video_idx)]) + ".pt")
+
+        sample["data"] = vframes.numpy()
+        sample["type"] = "video"
+        sample = composed(sample)
+        vframes = sample["data"]
+
+        # attempt to free some memory
+        del sample
+        sample = {}
+
+        torch.save(vframes, save_name)
+
+        if old_video_idx < video_idx or i == len(videoclips)-1:
+            print("Done processing {}".format(video_names[old_video_idx]))
+            with open(annotations_out, "a") as f:
+                f.write("{},{},{},{}\n".format(join("data", label, video_name), label, counter[str(old_video_idx)]+1, subset_size))
+        
+        print(save_name)
+        
+        old_video_idx = video_idx
+
+
 
 def setup(input_dir, output_dir):
     ## Setup structure of the output directory.
@@ -90,7 +134,7 @@ def setup(input_dir, output_dir):
 
     annotations_out = join(data_out_root, "annotations.csv") 
     with open(annotations_out,'w+') as f:
-        f.write("# filename,label,shape\n") # Header
+        f.write("# filename,label,subsets,subset_len\n") # Header
 
     return data_out_root 
 
