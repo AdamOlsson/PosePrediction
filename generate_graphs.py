@@ -1,49 +1,52 @@
-"""
-This script generates graphs for human pose prediction. It assumes that the in the data directory,
-there exists a file called "annotations.csv" that contains paths and labels to all videos in the dataset.
+## 
+## Due to memory constrainsts, the video has to divided into subclips and then have
+## graphs generate. After this script is done, there exists one additional script
+## that merges all the partial graphs of a video to one single graph. This script
+## assumes that there is a file called annotations.csv in the input directory.
+## 
+## The outout directory will have the following format:
+## 
+## <output dir>
+##     annotations.csv
+##     data/
+##         <label1>
+##             video name/
+##                  0.json
+##                  1.json
+##                  ...
+##         <label2>
+##             video name/
+##                  0.json
+##                  1.json
+##                  ...
+##         ...
+## 
+## The annotations file will have the follow format:
+## 
+## # path,label,subsets,subset_len
+## <path1>,<label>,...
+## <path2>,<label>,...
+## ...
+## 
+## 
+## Usage:
+## NOTE: Paths needs to relative
+## python generate_graphs.py --data_dir <path to data root> --out_dir <path to output dir>
 
-The output directory will have the following structure:
-
-<output dir>
-    annotations.csv
-    data/
-        <label1>
-            <video name>.json
-            ...
-        <label2>
-            <video name>.json
-            ...
-
-The annotations file will have the follow format:
-
-# path, label
-<path1>,<label>
-<path2>,<label>
-...
-
-
-Usage:
-python generate_graphs.py --data_dir <path to data root> --out_dir <path to output dir>
-"""
-# torch & torchvision
-import torch
-from torchvision.transforms import Compose
-
-# model & datasets
 from model.PoseModel import PoseModel
-from Datasets.VideoDataset import VideoDataset
-from Datasets.VideoPredictor import VideoPredictor
 
-# Transformers
+from torchvision.datasets.video_utils import VideoClips
 from Transformers.FactorCrop import FactorCrop
 from Transformers.RTPosePreprocessing import RTPosePreprocessing
 from Transformers.ToRTPoseInput import ToRTPoseInput
 
-# util
+from torchvision.transforms import Compose
+
 from util.load_config import load_config
+from paf.util import save_humans
 from paf.paf_to_pose import paf_to_pose_cpp
 from paf.body_part_construction import body_part_construction, body_part_translation
-from paf.util import save_humans
+
 
 # native
 import sys, getopt
@@ -51,105 +54,127 @@ from shutil import rmtree
 from os.path import exists, join, basename, splitext
 from os import makedirs, mkdir
 
+import torch
+
 # misc
 import pandas as pd # easy load of csv
 
-def generate_graphs(input_dir, output_dir, device="cpu"):
-    def output_handler(outputs):
-        """ 
-        When splitting the video into batches the output from the VideoPredictor
-        is on the form [((branch1, branch2),loss),....]. This method transforms said
-        output to [branch1, branch2]. We do not care about loss.
-        """
-        branch1, branch2 = [], []
-        for ((b1,b2),_) in outputs:
-            branch1.append(b1)
-            branch2.append(b2)
-
-        return torch.cat(branch1, 0), torch.cat(branch2, 0)
-
-    print("\n############   Starting graph generation    ############\n")
-    print("Using device {}".format(device))
+def main(input_dir, output_dir):
+    
+    device = "cuda"
     config = load_config("config.json")
 
-    annotations_file_input  = join(input_dir, "annotations.csv")
-    annotations_file_output = join(output_dir, "graphs", "annotations.csv")
-    data_out = join(output_dir, "graphs", "data")
+    annotations_in = join(input_dir, "annotations.csv")
+    annotations_out = join(output_dir, "annotations.csv")
 
-    print("Loading dataset...")
-    transformers = [FactorCrop(config["model"]["downsample"], dest_size=config["dataset"]["image_size"]), RTPosePreprocessing(), ToRTPoseInput(0)]
-    video_dataset = VideoDataset(annotations_file_input, input_dir, transform=Compose(transformers), load_copy=False)
+    annotations = pd.read_csv(annotations_in)
+    labels = list(annotations.iloc[:,1])
+    #labels = [(annotations.iloc[0,1])] # debug
 
+    subset_size = 16
+    video_names = [join(input_dir, annotations.iloc[i,0]) for i in range(len(annotations))]
+    #video_names = [join(input_dir, annotations.iloc[0,0])] # debug
+    videoclips = VideoClips(video_names, clip_length_in_frames=subset_size, frames_between_clips=subset_size)
+
+    transformers = [
+        FactorCrop(config["model"]["downsample"], dest_size=config["dataset"]["image_size"]),
+        RTPosePreprocessing(),
+        ToRTPoseInput(0),
+        ]
+
+    composed = Compose(transformers)
+    
     model = PoseModel()
     model = model.to(device)
     model.load_state_dict(torch.load("model/weights/vgg19.pth", map_location=torch.device(device)))
+    
+    counter, sample = {}, {}
+    vframes = None
+    old_video_idx = 0
+    for i in range(len(videoclips)):
+        vframes,_,info, video_idx = videoclips.get_clip(i)
 
-    print("Setup of video predictor to reduce RAM or VRAM (cpu or gpu) usage...")
-    no_video_subsets = 64
-    video_predictor = VideoPredictor(model, no_video_subsets, device, output_handler=output_handler)
+        label = labels[video_idx]
 
-    print("Starting generations of graphs...")
-    for sample_idx in range(len(video_dataset)):
-        sample = video_dataset[sample_idx]
+        video_name = basename(video_names[video_idx])
+        video_dir = join(output_dir, "data", label, video_name)
 
-        exit()
+        if not exists(video_dir):
+            mkdir(video_dir)
+        
+        if str(video_idx) in counter:
+            counter[str(video_idx)] += 1
+        else: 
+            counter[str(video_idx)] = 0
 
-        sample_name       = sample["name"]
-        sample_label      = sample["label"]
-        sample_properties = sample["properties"]
+
+        sample["data"] = vframes.numpy()
+        sample["type"] = "video"
+        sample = composed(sample)
+        vframes = sample["data"]
+
+        # attempt to free some memory
+        del sample
+        sample = {}
+
         with torch.no_grad():
-            (branch1, branch2) = video_predictor.predict(sample["data"])
+            (branch1, branch2), _ = model(vframes.to(device))
 
-        del sample # free memory
+        del vframes
+        vframes = None
 
         paf = branch1.data.cpu().numpy().transpose(0, 2, 3, 1)
         heatmap = branch2.data.cpu().numpy().transpose(0, 2, 3, 1)
 
+        # Construct humans on every frame
         no_frames = len(paf[:]) # == len(heatmap[:])
         frames = []
         for frame in range(no_frames):
             humans = paf_to_pose_cpp(heatmap[frame], paf[frame], config)
             frames.append(humans)
 
-        del paf, heatmap # free as much memory as possible
-        # TODO Remove background humans
-
-        name, _ = splitext(basename(sample_name))
-        save_file = join(data_out, sample_label, name + ".json")
+        # attempt to free some memory
+        del paf
+        del heatmap
+        paf = []
+        heatmap = []
+        
         metadata = {
-            "filename": sample_name,
+            "filename": video_names[video_idx],
             "body_part_translation":body_part_translation,
             "body_construction":body_part_construction,
-            "label":sample_label,
-            "properties":sample_properties
+            "label":labels[video_idx],
+            "video_properties":info,
+            "subpart":counter[str(video_idx)]
         }
 
-        save_humans(save_file, frames, metadata)
-        print(save_file)
+        save_name = join(video_dir, str(counter[str(video_idx)]) + ".json")
+
+        save_humans(save_name, frames, metadata)
+
+        if old_video_idx < video_idx or i == len(videoclips)-1:
+            print("Done processing {}".format(video_names[old_video_idx]))
+            with open(annotations_out, "a") as f:
+                f.write("{},{},{},{}\n".format(join("data", label, video_name), label, counter[str(old_video_idx)]+1, subset_size))
         
-        # write to annotations file
-        with open(annotations_file_output, "a") as f:
-            f.write("{},{}\n".format(join("data", sample_label, name + ".json"), sample_label))
-        exit()
-    print("\n###############   Graph generation done   ##############\n")
+        print(save_name)
+        
+        old_video_idx = video_idx
+
 
 
 def setup(input_dir, output_dir):
-    """ Setup structure of the output directory. """
-    print("\n##################   Starting setup   ##################\n")
+    ## Setup structure of the output directory.
     annotations_path = join(input_dir, "annotations.csv")
-    print("Reading data annotations...")
     annotations = pd.read_csv(annotations_path)
     
     labels = annotations.iloc[:,1]
     unique_labels = list(set(labels))
-    print("These are the labels that were found in the dataset:\n{}".format(unique_labels))
 
-    data_out_root = join(output_dir, "graphs")
+    data_out_root = join(output_dir, "preprocessed")
 
     # delete data, start from clean slate
     if exists(data_out_root):
-        print("Found old graphs, deleting...")
         rmtree(data_out_root)
     
     data_out = join(data_out_root, "data")
@@ -157,16 +182,13 @@ def setup(input_dir, output_dir):
 
     for label in unique_labels:
         path = join(data_out, label)
-        print("Creating directory {}".format(path))
         mkdir(path)
 
     annotations_out = join(data_out_root, "annotations.csv") 
-    print("Creating file {}".format(annotations_out))
     with open(annotations_out,'w+') as f:
-        f.write("# filename,label\n") # Header
-            
-    print("\n##################   Setup Done   ##################\n")
-    
+        f.write("# filename,label,subsets,subset_len\n") # Header
+
+    return data_out_root 
 
 
 
@@ -174,14 +196,11 @@ def parse_args(argv):
     try:
         opts, _ = getopt.getopt(argv, 'hi:o:', ['input_dir=', 'output_dir='])
     except getopt.GetoptError:
-       print('json_to_ndarray.py --input <data directory> --output <output directory>')
        sys.exit(2)
-
     input_dir = ""
     output_dir = ""
     for opt, arg in opts:
         if opt == '-h':
-            print('generate_graphs.py -i <input directory> -o <output directory>')
             sys.exit()
         elif opt in ("-i", "--input"):
             input_dir = arg
@@ -192,5 +211,5 @@ def parse_args(argv):
 
 if __name__ == "__main__":
     input_dir, output_dir = parse_args(sys.argv[1:])
-    setup(input_dir, output_dir)
-    generate_graphs(input_dir, output_dir, device="cuda")
+    output_dir = setup(input_dir, output_dir)
+    main(input_dir, output_dir)
