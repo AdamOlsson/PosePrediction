@@ -58,6 +58,7 @@ import torch
 
 # misc
 import pandas as pd # easy load of csv
+from util.setup_directories import setup
 
 def main(input_dir, output_dir):
     
@@ -162,36 +163,6 @@ def main(input_dir, output_dir):
         old_video_idx = video_idx
 
 
-
-def setup(input_dir, output_dir):
-    ## Setup structure of the output directory.
-    annotations_path = join(input_dir, "annotations.csv")
-    annotations = pd.read_csv(annotations_path)
-    
-    labels = annotations.iloc[:,1]
-    unique_labels = list(set(labels))
-
-    data_out_root = join(output_dir, "preprocessed")
-
-    # delete data, start from clean slate
-    if exists(data_out_root):
-        rmtree(data_out_root)
-    
-    data_out = join(data_out_root, "data")
-    makedirs(data_out) # recursive create of root and data dir
-
-    for label in unique_labels:
-        path = join(data_out, label)
-        mkdir(path)
-
-    annotations_out = join(data_out_root, "annotations.csv") 
-    with open(annotations_out,'w+') as f:
-        f.write("# filename,label,subsets,subset_len\n") # Header
-
-    return data_out_root 
-
-
-
 def parse_args(argv):
     try:
         opts, _ = getopt.getopt(argv, 'hi:o:', ['input_dir=', 'output_dir='])
@@ -211,5 +182,5 @@ def parse_args(argv):
 
 if __name__ == "__main__":
     input_dir, output_dir = parse_args(sys.argv[1:])
-    output_dir = setup(input_dir, output_dir)
+    output_dir = setup(input_dir, output_dir, "partial_graphs", "filename,label,subsets,subset_len")
     main(input_dir, output_dir)
