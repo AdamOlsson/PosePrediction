@@ -8,9 +8,9 @@ from util.setup_directories import setup
 from paf.util import load_humans, save_humans
 
 def load_partial_jsons(path, no_partial_graphs):
-    dicts = [None]*no_partial_graphs
+    dicts = [None]*(no_partial_graphs+1)
 
-    for i in range(no_partial_graphs):
+    for i in range(no_partial_graphs+1):
         path_partial_graphs = join(path, str(i) + '.json')
         with open(path_partial_graphs) as f:
             dicts[i] = json.load(f)

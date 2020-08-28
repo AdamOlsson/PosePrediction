@@ -91,7 +91,7 @@ def main(input_dir, output_dir):
     
     counter, sample = {}, {}
     vframes = None
-    old_video_idx = 0
+    subpart_count = {}
     for i in range(len(videoclips)):
         vframes,_,info, video_idx = videoclips.get_clip(i)
 
@@ -153,14 +153,20 @@ def main(input_dir, output_dir):
 
         save_humans(save_name, frames, metadata)
 
-        if old_video_idx < video_idx or i == len(videoclips)-1:
-            print("Done processing {}".format(video_names[old_video_idx]))
-            with open(annotations_out, "a") as f:
-                f.write("{},{},{},{}\n".format(join("data", label, video_name), label, counter[str(old_video_idx)]+1, subset_size))
+        dir_name = join("data", label, video_name)
+        if dir_name in subpart_count:
+            (l, n, ss) = subpart_count[dir_name]
+            subpart_count[dir_name] = (l, n+1, ss)
+        else:
+            subpart_count[dir_name] = (label, 0, subset_size)
         
-        print(save_name)
+        print(save_name)        
+    
+    with open(annotations_out, "a") as f:
+        for key, (l,n,ss) in d.items():
+            f.write("{},{},{},{}\n".format(key, l, n, ss))
         
-        old_video_idx = video_idx
+
 
 
 def parse_args(argv):
