@@ -163,10 +163,8 @@ def main(input_dir, output_dir):
         print(save_name)        
     
     with open(annotations_out, "a") as f:
-        for key, (l,n,ss) in d.items():
+        for key, (l,n,ss) in subpart_count.items():
             f.write("{},{},{},{}\n".format(key, l, n, ss))
-        
-
 
 
 def parse_args(argv):

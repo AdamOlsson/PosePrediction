@@ -17,9 +17,6 @@ def load_partial_jsons(path, no_partial_graphs):
     
     return dicts
 
-def remove_bg_humans(bodies):
-    return {}
-
 def merge_dicts(dicts):
 
     new_frames = []
@@ -52,6 +49,8 @@ def merge_dicts(dicts):
 def main(input_dir, output_dir):
     annotations_path = join(input_dir, "annotations.csv")
     annotations = pd.read_csv(annotations_path)
+    
+    annotations_out = join(output_dir, "annotations.csv")
 
     paths = annotations.iloc[:,0]
     labels = annotations.iloc[:,1]
@@ -66,6 +65,11 @@ def main(input_dir, output_dir):
 
         with open(filename, 'w') as f:
             f.write(json.dumps(merged_dicts, indent=4, sort_keys=True))
+
+        annotations_filename = join("data", l, name + ".json")
+        with open(annotations_out, "a") as f:
+            f.write("{},{},{}\n".format(annotations_filename, l, len(merged_dicts["frames"])))
+
 
     print("\nOutput can be found at {}".format(output_dir))
 
