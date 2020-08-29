@@ -38,6 +38,7 @@ def merge_dicts(dicts):
 
     metadata = dicts[0]["metadata"]
     metadata["filename"] = basename(metadata["filename"])
+    del metadata["subpart"] # only used in this script
 
     new_dict = {}
     new_dict["frames"] = new_frames
