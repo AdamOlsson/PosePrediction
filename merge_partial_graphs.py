@@ -6,6 +6,7 @@ from os.path import join, basename, splitext
 import pandas as pd # easy load of csv
 from util.setup_directories import setup
 from paf.util import load_humans, save_humans
+from util.remove_bg_humans import remove_bg_humans
 
 def load_partial_jsons(path, no_partial_graphs):
     dicts = [None]*(no_partial_graphs+1)
@@ -59,6 +60,8 @@ def main(input_dir, output_dir):
     for p, l, no in zip(paths, labels, no_partial_graphs):
         dicts = load_partial_jsons(join(input_dir, p), no)
         merged_dicts = merge_dicts(dicts)
+
+        merged_dicts["frames"] = remove_bg_humans(merged_dicts["frames"])
 
         name, _ = splitext(basename(p))
         filename = join(output_dir, "data", l, name + ".json")
