@@ -31,7 +31,7 @@
 ## 
 ## Usage:
 ## NOTE: Paths needs to relative
-## python generate_graphs.py --data_dir <path to data root> --out_dir <path to output dir>
+## python generate_graphs.py -i <path to data root> -o <path to output dir>
 
 from model.PoseModel import PoseModel
 
