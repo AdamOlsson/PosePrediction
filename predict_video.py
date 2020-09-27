@@ -9,38 +9,32 @@ from Transformers.ToRTPoseInput import ToRTPoseInput
 from torchvision.transforms import Compose
 
 from util.load_config import load_config
-from paf.util import save_humans
+from paf.util import save_humans, load_humans
+from paf.common import draw_humans
 from paf.paf_to_pose import paf_to_pose_cpp
 from paf.body_part_construction import body_part_construction, body_part_translation
 
-
 # native
-import sys, getopt
+import sys, getopt, json, shutil
 from shutil import rmtree
-from os.path import exists, join, basename, splitext
-from os import makedirs, mkdir
+from os.path import join
+from os import mkdir, listdir
 
-import torch
+import torch, torchvision
 
 # misc
-import pandas as pd # easy load of csv
+import numpy as np
 from util.setup_directories import setup
+from merge_partial_graphs import merge_dicts, load_partial_jsons
+
 
 def main(input_vid, output_dir):
     
     device = "cuda"
     config = load_config("config.json")
 
-    # annotations_in = join(input_dir, "annotations.csv")
-    # annotations_out = join(output_dir, "annotations.csv")
+    subset_size = 15
 
-    # annotations = pd.read_csv(annotations_in)
-    # labels = list(annotations.iloc[:,1])
-    #labels = [(annotations.iloc[0,1])] # debug
-
-    subset_size = 16
-    # video_names = [join(input_dir, annotations.iloc[i,0]) for i in range(len(annotations))]
-    #video_names = [join(input_dir, annotations.iloc[0,0])] # debug
     videoclips = VideoClips([input_vid], clip_length_in_frames=subset_size, frames_between_clips=subset_size)
 
     transformers = [
@@ -55,25 +49,10 @@ def main(input_vid, output_dir):
     model = model.to(device)
     model.load_state_dict(torch.load("model/weights/vgg19.pth", map_location=torch.device(device)))
     
-    counter, sample = {}, {}
+    sample = {}
     vframes = None
-    # subpart_count = {}
     for i in range(len(videoclips)):
-        vframes,_,info, video_idx = videoclips.get_clip(i)
-
-        # label = labels[video_idx]
-
-        # video_name = basename(video_names[video_idx])
-        # video_dir = join(output_dir, "data", label, video_name)
-
-        # if not exists(video_dir):
-            # mkdir(video_dir)
-        
-        # if str(video_idx) in counter:
-            # counter[str(video_idx)] += 1
-        # else: 
-            # counter[str(video_idx)] = 0
-
+        vframes,_,info, _ = videoclips.get_clip(i)
 
         sample["data"] = vframes.numpy()
         sample["type"] = "video"
@@ -105,33 +84,54 @@ def main(input_vid, output_dir):
         del heatmap
         paf = []
         heatmap = []
+
+        metadata = {
+            "filename": "",
+            "body_part_translation":body_part_translation,
+            "body_construction":body_part_construction,
+            "label":0,
+            "video_properties":info,
+            "subpart":str(i)
+        }
+
+
+        save_name = join(output_dir, str(i) + ".json")
+
+        save_humans(save_name, frames, metadata)
         
-        # metadata = {
-            # "filename": video_names[video_idx],
-            # "body_part_translation":body_part_translation,
-            # "body_construction":body_part_construction,
-            # "label":labels[video_idx],
-            # "video_properties":info,
-            # "subpart":counter[str(video_idx)]
-        # }
+        print("Created subgraph:", save_name)        
+   
+    print("Merging subgraphs...")
+    partial_graphs_names = listdir(output_dir)
 
-        save_name = join(output_dir, str(video_idx) + ".json")
+    # merging partial dicts
+    dicts = load_partial_jsons(output_dir, len(partial_graphs_names)-1)
+    merged_dicts = merge_dicts(dicts)
 
-        save_humans(save_name, frames, {})
+    filename = join(output_dir, "merged" + ".json")
+    with open(filename, 'w') as f:
+        f.write(json.dumps(merged_dicts, indent=4, sort_keys=True))
 
-        # dir_name = join("data", label, video_name)
-        # if dir_name in subpart_count:
-            # (l, n, ss) = subpart_count[dir_name]
-            # subpart_count[dir_name] = (l, n+1, ss)
-        # else:
-            # subpart_count[dir_name] = (label, 0, subset_size)
-        
-        print(save_name)        
-        # with open(annotations_out, "a") as f:
-        # for key, (l,n,ss) in subpart_count.items():
-            # f.write("{},{},{},{}\n".format(key, l, n, ss))
+    print("Rendering video...")
+    # render video
+    graph_data = load_humans(filename)
+    metadata, humans = graph_data["metadata"], graph_data["frames"]
+    vframes, _, _ = torchvision.io.read_video(input_vid, pts_unit="sec") # Tensor[T, H, W, C]) – the T video frames
+    vframes = np.flip(vframes.numpy(), axis=3)
+    vframes = vframes[:len(humans)]
+    
+    for frame_idx in range(len(humans)):
+        vframes[frame_idx] = draw_humans(np.float32(vframes[frame_idx]), humans[frame_idx])
+    
+    vframes = np.flip(vframes, axis=3).copy()
+    save_path = join("skeleton.mp4")
+    fps = 30
+    torchvision.io.write_video(save_path, torch.from_numpy(vframes), fps)
 
-    # NOTE: At this point, partial graphs are generated at output_dir. Now to merge them
+    print("Video saved to {}".format(save_path))
+
+    print("Removing tmp dir _tmp_vid.")
+    shutil.rmtree(output_dir)
 
 
 
