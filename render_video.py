@@ -17,7 +17,6 @@ def main(graph_path, video_path):
 
     vframes, _, _ = torchvision.io.read_video(video_path, pts_unit="sec") # Tensor[T, H, W, C]) – the T video frames
     vframes = np.flip(vframes.numpy(), axis=3)
-
     # graph data is truncated due to dividing clip into subparts
     vframes = vframes[:len(humans)]
 
@@ -26,7 +25,7 @@ def main(graph_path, video_path):
 
     vframes = np.flip(vframes, axis=3).copy()
 
-    save_path = join("results", "skeleton_" + metadata["filename"])
+    save_path = join("skeleton_" + metadata["filename"])
     torchvision.io.write_video(save_path, from_numpy(vframes), int(metadata["video_properties"]["video_fps"]))
 
     print("Results written to {}".format(save_path))

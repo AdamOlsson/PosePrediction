@@ -36,6 +36,7 @@
 from model.PoseModel import PoseModel
 
 from torchvision.datasets.video_utils import VideoClips
+from Datasets.VideoClipsWrapper import VideoClipsWrapper
 from Transformers.FactorCrop import FactorCrop
 from Transformers.RTPosePreprocessing import RTPosePreprocessing
 from Transformers.ToRTPoseInput import ToRTPoseInput
@@ -55,6 +56,7 @@ from os.path import exists, join, basename, splitext
 from os import makedirs, mkdir
 
 import torch
+from torch.utils.data import DataLoader
 
 # misc
 import pandas as pd # easy load of csv
@@ -70,13 +72,9 @@ def main(input_dir, output_dir):
 
     annotations = pd.read_csv(annotations_in)
     labels = list(annotations.iloc[:,1])
-    #labels = [(annotations.iloc[0,1])] # debug
 
-    subset_size = 16
+    subset_size = 15
     video_names = [join(input_dir, annotations.iloc[i,0]) for i in range(len(annotations))]
-    #video_names = [join(input_dir, annotations.iloc[0,0])] # debug
-    videoclips = VideoClips(video_names, clip_length_in_frames=subset_size, frames_between_clips=subset_size)
-
     transformers = [
         FactorCrop(config["model"]["downsample"], dest_size=config["dataset"]["image_size"]),
         RTPosePreprocessing(),
@@ -84,87 +82,93 @@ def main(input_dir, output_dir):
         ]
 
     composed = Compose(transformers)
-    
+    videoclips = VideoClipsWrapper(video_names, clip_length_in_frames=subset_size, frames_between_clips=subset_size, transform=composed)
+
+    loader_batch_size = 16
+    loader_num_workers = 1 #(2)
+    dataloader = DataLoader(videoclips, batch_size=loader_batch_size, shuffle=False, num_workers=loader_num_workers)
+
     model = PoseModel()
     model = model.to(device)
     model.load_state_dict(torch.load("model/weights/vgg19.pth", map_location=torch.device(device)))
     
-    counter, sample = {}, {}
-    vframes = None
+    counter = {}
     subpart_count = {}
-    for i in range(len(videoclips)):
-        vframes,_,info, video_idx = videoclips.get_clip(i)
+    old_video_idx = 0
+    for batch_no, batch in enumerate(dataloader):
+        vframes_batch     = batch["data"]
+        info_batch        = batch["info"]
+        video_idx_batch   = batch["video_idx"]
 
-        label = labels[video_idx]
+        # iterate over the batch
+        for i in range(len(vframes_batch)):
+            vframes     = vframes_batch[i]
+            info        = {"video_fps": info_batch["video_fps"][i].item()}
+            video_idx   = video_idx_batch[i]
 
-        video_name = basename(video_names[video_idx])
-        video_dir = join(output_dir, "data", label, video_name)
+            label = labels[video_idx]
 
-        if not exists(video_dir):
-            mkdir(video_dir)
+            video_name = basename(video_names[video_idx])
+            video_dir = join(output_dir, "data", label, video_name)
+
+            # make dir that contains all partial graphs for a video
+            if not exists(video_dir):
+                mkdir(video_dir)
+
+            # keep track of frame count accross multiple files
+            if str(video_idx) in counter:
+                counter[str(video_idx)] += 1
+            else: 
+                counter[str(video_idx)] = 0
+
+            # processing
+            with torch.no_grad():
+                (branch1, branch2), _ = model(vframes.to(device))
+
+            del vframes
+            vframes = None
+
+            paf = branch1.data.cpu().numpy().transpose(0, 2, 3, 1)
+            heatmap = branch2.data.cpu().numpy().transpose(0, 2, 3, 1)
+
+            # Construct humans on every frame
+            no_frames = len(paf[:])
+            frames = []
+            for frame in range(no_frames):
+                humans = paf_to_pose_cpp(heatmap[frame], paf[frame], config)
+                frames.append(humans)
+
+            # attempt to free some memory
+            del paf
+            del heatmap
+            paf = []
+            heatmap = []
         
-        if str(video_idx) in counter:
-            counter[str(video_idx)] += 1
-        else: 
-            counter[str(video_idx)] = 0
+            metadata = {
+                "filename": video_names[video_idx],
+                "body_part_translation":body_part_translation,
+                "body_construction":body_part_construction,
+                "label":labels[video_idx],
+                "video_properties":info,
+                "subpart":counter[str(video_idx)]
+            }
 
+            # save graph file is json format
+            save_name = join(video_dir, str(counter[str(video_idx)]) + ".json")
+            save_humans(save_name, frames, metadata)
 
-        sample["data"] = vframes.numpy()
-        sample["type"] = "video"
-        sample = composed(sample)
-        vframes = sample["data"]
+            dir_name = join("data", label, video_name)
+            if dir_name in subpart_count:
+                (l, n, ss) = subpart_count[dir_name]
+                subpart_count[dir_name] = (l, n+1, ss)
+            else:
+                subpart_count[dir_name] = (label, 0, subset_size)
 
-        # attempt to free some memory
-        del sample
-        sample = {}
-
-        with torch.no_grad():
-            (branch1, branch2), _ = model(vframes.to(device))
-
-        del vframes
-        vframes = None
-
-        paf = branch1.data.cpu().numpy().transpose(0, 2, 3, 1)
-        heatmap = branch2.data.cpu().numpy().transpose(0, 2, 3, 1)
-
-        # Construct humans on every frame
-        no_frames = len(paf[:]) # == len(heatmap[:])
-        frames = []
-        for frame in range(no_frames):
-            humans = paf_to_pose_cpp(heatmap[frame], paf[frame], config)
-            frames.append(humans)
-
-        # attempt to free some memory
-        del paf
-        del heatmap
-        paf = []
-        heatmap = []
-        
-        metadata = {
-            "filename": video_names[video_idx],
-            "body_part_translation":body_part_translation,
-            "body_construction":body_part_construction,
-            "label":labels[video_idx],
-            "video_properties":info,
-            "subpart":counter[str(video_idx)]
-        }
-
-        save_name = join(video_dir, str(counter[str(video_idx)]) + ".json")
-
-        save_humans(save_name, frames, metadata)
-
-        dir_name = join("data", label, video_name)
-        if dir_name in subpart_count:
-            (l, n, ss) = subpart_count[dir_name]
-            subpart_count[dir_name] = (l, n+1, ss)
-        else:
-            subpart_count[dir_name] = (label, 0, subset_size)
-        
-        print(save_name)        
+            print(save_name)        
     
     with open(annotations_out, "a") as f:
-        for key, (l,n,ss) in subpart_count.items():
-            f.write("{},{},{},{}\n".format(key, l, n, ss))
+       for key, (l,n,ss) in subpart_count.items():
+           f.write("{},{},{},{}\n".format(key, l, n, ss))
 
 
 def parse_args(argv):

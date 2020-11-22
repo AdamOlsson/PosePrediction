@@ -12,9 +12,12 @@ class VideoClipsWrapper(Dataset):
         self.video_clips = VideoClips(self.video_names, clip_length_in_frames=clip_length_in_frames, frames_between_clips=frames_between_clips)
 
     def __len__(self):
-        return len(self.video_names)
+        return len(self.video_clips)
 
     def __getitem__(self, idx):
-        vframes, aframes, info, video_idx = self.video_clips.get_clip(idx)
-        vframes = self.transform(vframes.numpy())
-        return vframes, aframes, info, video_idx
+        vframes, _, info, video_idx = self.video_clips.get_clip(idx)
+        sample = {"data":vframes.numpy(), "info":info, "video_idx":video_idx, "type":"video"}
+        if self.transform:
+            sample = self.transform(sample)
+
+        return sample

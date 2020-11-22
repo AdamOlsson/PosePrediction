@@ -8,4 +8,3 @@ test.py
 dist/
 build/
 results/
-.azureml/
