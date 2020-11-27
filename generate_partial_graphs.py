@@ -84,7 +84,7 @@ def main(input_dir, output_dir):
     composed = Compose(transformers)
     videoclips = VideoClipsWrapper(video_names, clip_length_in_frames=subset_size, frames_between_clips=subset_size, transform=composed)
 
-    loader_batch_size = 16
+    loader_batch_size = 20
     loader_num_workers = 1 #(2)
     dataloader = DataLoader(videoclips, batch_size=loader_batch_size, shuffle=False, num_workers=loader_num_workers)
 
@@ -157,18 +157,8 @@ def main(input_dir, output_dir):
             save_name = join(video_dir, str(counter[str(video_idx)]) + ".json")
             save_humans(save_name, frames, metadata)
 
-            dir_name = join("data", label, video_name)
-            if dir_name in subpart_count:
-                (l, n, ss) = subpart_count[dir_name]
-                subpart_count[dir_name] = (l, n+1, ss)
-            else:
-                subpart_count[dir_name] = (label, 0, subset_size)
-
             print(save_name)        
     
-    with open(annotations_out, "a") as f:
-       for key, (l,n,ss) in subpart_count.items():
-           f.write("{},{},{},{}\n".format(key, l, n, ss))
 
 
 def parse_args(argv):

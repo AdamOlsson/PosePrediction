@@ -1,5 +1,5 @@
 # native
-import sys, getopt, json
+import sys, getopt, json, os
 from os.path import join, basename, splitext
 
 # misc
@@ -7,6 +7,12 @@ import pandas as pd # easy load of csv
 from util.setup_directories import setup
 from paf.util import load_humans, save_humans
 from util.remove_bg_humans import remove_bg_humans
+
+## Usage:
+## NOTE: Paths needs to relative
+## NOTE: Annotations file is not considered
+## python merge_partial_graphs.py -i <path to data root> -o <path to output dir>
+
 
 def load_partial_jsons(path, no_partial_graphs):
     dicts = [None]*(no_partial_graphs+1)
@@ -49,30 +55,34 @@ def merge_dicts(dicts):
 
 
 def main(input_dir, output_dir):
-    annotations_path = join(input_dir, "annotations.csv")
-    annotations = pd.read_csv(annotations_path)
+    data_path = join(input_dir, "data") # partial_graphs/data/
+    labels = os.listdir(data_path)
     
     annotations_out = join(output_dir, "annotations.csv")
 
-    paths = annotations.iloc[:,0]
-    labels = annotations.iloc[:,1]
-    no_partial_graphs = annotations.iloc[:,2]
-    for p, l, no in zip(paths, labels, no_partial_graphs):
-        dicts = load_partial_jsons(join(input_dir, p), no)
-        merged_dicts = merge_dicts(dicts)
+    for label in labels:
+        data_label = join(data_path, label) # data_label = partial_graphs/data/{backsquat, frontsquat, snatch}/
 
-        merged_dicts["frames"] = remove_bg_humans(merged_dicts["frames"])
+        samples = os.listdir(data_label)
+        for sample in samples:
+            data_label_sample = join(data_label, sample) # data_label_sample = artial_graphs/data/{backsquat, frontsquat, snatch}/<sample>.mp4/
+            no_partial_graphs = len(os.listdir(data_label_sample)) -1
+            dicts = load_partial_jsons(data_label_sample, no_partial_graphs)
+            merged_dicts = merge_dicts(dicts)
 
-        name, _ = splitext(basename(p))
-        filename = join(output_dir, "data", l, name + ".json")
-        print("Merged {}".format(filename))
+            merged_dicts["frames"] = remove_bg_humans(merged_dicts["frames"])
 
-        with open(filename, 'w') as f:
-            f.write(json.dumps(merged_dicts, indent=4, sort_keys=True))
+            name, _ = splitext(basename(sample))
+            filename = join(output_dir, "data", label, name + ".json")
+            print("Merged {}".format(filename))
 
-        annotations_filename = join("data", l, name + ".json")
-        with open(annotations_out, "a") as f:
-            f.write("{},{},{}\n".format(annotations_filename, l, len(merged_dicts["frames"])))
+            with open(filename, 'w') as f:
+                f.write(json.dumps(merged_dicts, indent=4, sort_keys=True))
+
+            annotations_filename = join("data", label, name + ".json")
+
+            with open(annotations_out, "a") as f:
+                f.write("{},{},{}\n".format(annotations_filename, label, len(merged_dicts["frames"])))
 
 
     print("\nOutput can be found at {}".format(output_dir))
