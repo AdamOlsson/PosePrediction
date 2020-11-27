@@ -67,15 +67,22 @@ def main(input_dir, output_dir):
         for sample in samples:
             data_label_sample = join(data_label, sample) # data_label_sample = artial_graphs/data/{backsquat, frontsquat, snatch}/<sample>.mp4/
             no_partial_graphs = len(os.listdir(data_label_sample)) -1
-            dicts = load_partial_jsons(data_label_sample, no_partial_graphs)
-            merged_dicts = merge_dicts(dicts)
-
-            merged_dicts["frames"] = remove_bg_humans(merged_dicts["frames"])
 
             name, _ = splitext(basename(sample))
             filename = join(output_dir, "data", label, name + ".json")
-            print("{:6d}:: Merged {}".format(count, filename))
+            print("{:6d} ::: Merging {}...".format(count, filename))
             count += 1
+            merged_dicts = None
+            try:
+                dicts = load_partial_jsons(data_label_sample, no_partial_graphs)
+                merged_dicts = merge_dicts(dicts)
+            except:
+                with open(join(output_dir, "errors.log"), "a+") as f:
+                    f.write("Error parsing {}\n".format(data_label_sample))
+                    print("{:6d} !!! ERROR {}, skipping...".format(count, filename))
+                    continue
+
+            merged_dicts["frames"] = remove_bg_humans(merged_dicts["frames"])
 
             with open(filename, 'w') as f:
                 f.write(json.dumps(merged_dicts, indent=4, sort_keys=True))
