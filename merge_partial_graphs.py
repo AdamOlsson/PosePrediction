@@ -59,7 +59,7 @@ def main(input_dir, output_dir):
     labels = os.listdir(data_path)
     
     annotations_out = join(output_dir, "annotations.csv")
-
+    count = 0
     for label in labels:
         data_label = join(data_path, label) # data_label = partial_graphs/data/{backsquat, frontsquat, snatch}/
 
@@ -74,7 +74,8 @@ def main(input_dir, output_dir):
 
             name, _ = splitext(basename(sample))
             filename = join(output_dir, "data", label, name + ".json")
-            print("Merged {}".format(filename))
+            print("{:6d}:: Merged {}".format(count, filename))
+            count += 1
 
             with open(filename, 'w') as f:
                 f.write(json.dumps(merged_dicts, indent=4, sort_keys=True))
