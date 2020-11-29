@@ -12,15 +12,15 @@ install_requires = [
     "av"
 ]
 
-packages = [
-    "Transformers",
-    "paf",
-    "paf.pafprocess",
-    "Datasets",
-    "model",
-    "model.FeatureExtractors",
-    "util"
-]
+#packages = [
+#    "Transformers",
+#    "paf",
+#    "paf.pafprocess",
+#    "Datasets",
+#    "model",
+#    "model.FeatureExtractors",
+#    "util"
+#]
 # Install dependencies
 setup(name='PosePrediction',
       version='0.1',
